@@ -27,11 +27,12 @@ from django.views.decorators.http import require_POST
 import uuid
 import base64
 
-from .models import User, Company, Document, generate_gsezid
+from .models import User, Company, Document, generate_gsezid, CardPrint
 from .forms import (
     UserRegistrationForm, UserProfileForm, DocumentForm, 
     CompanyForm, UserManagementForm, CustomAuthenticationForm,
-    AdminUserEditForm, AdminUserCreationForm, SimpleUserRegistrationForm
+    AdminUserEditForm, AdminUserCreationForm, SimpleUserRegistrationForm,
+    CardPrintForm
 )
 
 # Helper functions for user type checks
@@ -68,6 +69,11 @@ def register_view(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.user_type = 'user'  # Default user type
+            
+            # Set the QR code URL
+            if user.gsezid:
+                user.qr_code = f"http://207.180.234.113/IDCARD/{user.gsezid}"
+                
             user.save()
             messages.success(request, f'Account created successfully. Your GSEZ ID is {user.gsezid}. You can now login using this ID.')
             return redirect('login')
@@ -90,6 +96,9 @@ def simple_register_view(request):
                 
                 # Use the new GSEZ ID format
                 user.gsezid = generate_gsezid()
+                
+                # Set the QR code URL
+                user.qr_code = f"http://207.180.234.113/IDCARD/{user.gsezid}"
                 
                 # Save user
                 user.save()
@@ -481,6 +490,7 @@ def admin_manage_users(request):
     verified_filter = request.GET.get('verified', None)
     printed_filter = request.GET.get('printed', None)
     search_query = request.GET.get('search', '')
+    card_print_date = request.GET.get('card_print_date', None)
     
     # Get items per page preference, default to 10
     items_per_page = request.GET.get('per_page', '10')
@@ -505,6 +515,23 @@ def admin_manage_users(request):
             users = users.filter(is_printed=True)
         elif printed_filter == 'no':
             users = users.filter(is_printed=False)
+    
+    # Filter by card print date if provided
+    if card_print_date:
+        try:
+            # Convert string to date object
+            filter_date = datetime.strptime(card_print_date, '%Y-%m-%d').date()
+            
+            # Get user IDs with matching card print date
+            card_print_user_ids = CardPrint.objects.filter(
+                card_print_date=filter_date
+            ).values_list('user_id', flat=True).distinct()
+            
+            # Filter users by these IDs
+            users = users.filter(id__in=card_print_user_ids)
+        except (ValueError, TypeError):
+            # If date format is invalid, ignore this filter
+            pass
         
     if search_query:
         users = users.filter(
@@ -593,6 +620,7 @@ def admin_manage_users(request):
         'current_verified': verified_filter,
         'current_printed': printed_filter,
         'current_search': search_query,
+        'current_card_print_date': card_print_date,
         'items_per_page': items_per_page,
         'total_users': users.count(),
         'page_obj': users_page,
@@ -602,22 +630,24 @@ def admin_manage_users(request):
 @login_required
 @user_passes_test(is_admin)
 def admin_user_detail(request, user_id):
-    user = get_object_or_404(User, id=user_id)
-    documents = Document.objects.filter(user=user)
+    user_obj = get_object_or_404(User, id=user_id)
+    documents = Document.objects.filter(user=user_obj)
+    card_prints = CardPrint.objects.filter(user=user_obj)
     
     if request.method == 'POST':
-        form = UserManagementForm(request.POST, instance=user)
+        form = UserManagementForm(request.POST, instance=user_obj)
         if form.is_valid():
             form.save()
-            messages.success(request, 'User updated successfully.')
-            return redirect('admin_user_detail', user_id=user.id)
+            messages.success(request, 'User status updated successfully.')
+            return redirect('admin_user_detail', user_id=user_id)
     else:
-        form = UserManagementForm(instance=user)
+        form = UserManagementForm(instance=user_obj)
     
     return render(request, 'core/admin/user_detail.html', {
-        'user_obj': user,
+        'user_obj': user_obj,
+        'form': form,
         'documents': documents,
-        'form': form
+        'card_prints': card_prints
     })
 
 @login_required
@@ -702,6 +732,10 @@ def admin_edit_user(request, user_id):
             
             # Set is_active based on allow_login
             user.is_active = allow_login
+            
+            # Ensure QR code URL is set if it doesn't exist
+            if not user.qr_code and user.gsezid:
+                user.qr_code = f"http://207.180.234.113/IDCARD/{user.gsezid}"
             
             # Set new password if provided
             if password1 and password2 and password1 == password2:
@@ -838,6 +872,9 @@ def admin_create_user(request):
             
             # If login is not allowed, store this information
             user.is_active = allow_login
+            
+            # Set the QR code URL
+            user.qr_code = f"http://207.180.234.113/IDCARD/{user.gsezid}"
                 
             # Save the user first to get an ID
             user.save()
@@ -1139,6 +1176,17 @@ def admin_manage_security(request):
 
 @login_required
 @user_passes_test(is_admin)
+def admin_export_fields_selection(request):
+    # Get unique companies for filtering
+    companies = User.objects.filter(user_type='user').values_list('current_employer_company', flat=True).distinct()
+    companies = [c for c in companies if c]  # Remove empty values
+    
+    return render(request, 'core/admin/export_fields.html', {
+        'companies': companies
+    })
+
+@login_required
+@user_passes_test(is_admin)
 def admin_export_users(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="users.xls"'
@@ -1149,59 +1197,171 @@ def admin_export_users(request):
     # Sheet header, first row
     row_num = 0
     
-    columns = [
-        'ID', 'Username', 'Email', 'First Name', 'Middle Name', 'Last Name',
-        'User Type', 'Status', 'Is Verified', 'Is Profile Complete', 'Is Printed',
-        'Nationality', 'Date of Birth', 'GSEZ Card Issue Date', 'GSEZ Card Expiry Date', 'GSEZ ID',
-        'Profile Full Link', 'Current Address', 'Is Permanent', 'Permanent Address',
-        'Current Employer', 'Join Date', 'Employee Code', 'Designation', 'Department', 'Company',
-        'Remarks', 'Rating', 'Emergency Contacts', 'Family Members', 'Previous Employers', 'Qualifications'
-    ]
+    # Define all possible columns
+    all_columns = {
+        'id': 'ID',
+        'username': 'Username',
+        'email': 'Email',
+        'first_name': 'First Name',
+        'middle_name': 'Middle Name',
+        'last_name': 'Last Name',
+        'user_type': 'User Type',
+        'status': 'Status',
+        'is_verified': 'Is Verified',
+        'is_required_profile_detail': 'Is Profile Complete',
+        'is_printed': 'Is Printed',
+        'nationality': 'Nationality',
+        'date_of_birth': 'Date of Birth',
+        'gsez_card_issue_date': 'GSEZ Card Issue Date',
+        'gsez_card_expiry_date': 'GSEZ Card Expiry Date',
+        'gsezid': 'GSEZ ID',
+        'profile_full_link': 'Profile Full Link',
+        'employee_contact_number': 'Employee Contact Number',
+        'qr_code': 'QR Code',
+        'current_address': 'Current Address',
+        'is_permanent': 'Is Permanent',
+        'permanent_address': 'Permanent Address',
+        'current_employer': 'Current Employer',
+        'current_employer_join_date': 'Join Date',
+        'current_employer_emp_code': 'Employee Code',
+        'current_employer_designation': 'Designation',
+        'current_employer_department': 'Department',
+        'current_employer_company': 'Company',
+        'current_employer_remarks': 'Remarks',
+        'current_employer_rating': 'Rating',
+        'emergency_contact_numbers': 'Emergency Contacts',
+        'family_members': 'Family Members',
+        'previous_employers': 'Previous Employers',
+        'qualifications': 'Qualifications',
+        'latest_card_print_date': 'Latest Card Print Date',
+        'card_print_remarks': 'Card Print Remarks',
+        'card_print_count': 'Card Print Count'
+    }
+    
+    # Get selected fields or use all fields if none selected
+    selected_fields = request.POST.getlist('fields') if request.method == 'POST' and request.POST.getlist('fields') else all_columns.keys()
+    
+    # Create columns list based on selected fields
+    columns = []
+    for field in selected_fields:
+        if field in all_columns:
+            columns.append(all_columns[field])
     
     # Write header row
     for col_num, column_title in enumerate(columns):
         ws.write(row_num, col_num, column_title)
     
-    # Get all users
+    # Get all users with filters
     users = User.objects.filter(user_type='user')
+    
+    # Apply filters if provided
+    if request.method == 'POST':
+        # Filter by GSEZ ID
+        gsezid_filter = request.POST.get('gsezid_filter')
+        if gsezid_filter:
+            users = users.filter(gsezid__icontains=gsezid_filter)
+        
+        # Filter by company
+        company_filter = request.POST.get('company_filter')
+        if company_filter:
+            users = users.filter(current_employer_company__icontains=company_filter)
+        
+        # Filter by card print date range
+        card_print_start_date = request.POST.get('card_print_start_date')
+        card_print_end_date = request.POST.get('card_print_end_date')
+        
+        if card_print_start_date and card_print_end_date:
+            # Get users who have card prints within the date range
+            user_ids_with_card_prints = CardPrint.objects.filter(
+                card_print_date__range=[card_print_start_date, card_print_end_date]
+            ).values_list('user_id', flat=True).distinct()
+            
+            users = users.filter(id__in=user_ids_with_card_prints)
     
     # Write data rows
     for user in users:
         row_num += 1
-        row = [
-            user.id,
-            user.username,
-            user.email,
-            user.first_name,
-            user.middle_name if user.middle_name else '',
-            user.last_name,
-            user.user_type,
-            user.status,
-            '1' if user.is_verified else '0',
-            '1' if not user.is_required_profile_detail else '0',
-            '1' if user.is_printed else '0',
-            user.nationality if user.nationality else '',
-            str(user.date_of_birth) if user.date_of_birth else '',
-            str(user.gsez_card_issue_date) if user.gsez_card_issue_date else '',
-            str(user.gsez_card_expiry_date) if user.gsez_card_expiry_date else '',
-            user.gsezid if user.gsezid else '',
-            user.profile_full_link if user.profile_full_link else '',
-            user.current_address if user.current_address else '',
-            '1' if user.is_permanent else '0',
-            user.permanent_address if user.permanent_address else '',
-            user.current_employer,
-            str(user.current_employer_join_date) if user.current_employer_join_date else '',
-            user.current_employer_emp_code,
-            user.current_employer_designation,
-            user.current_employer_department,
-            user.current_employer_company.company_name if user.current_employer_company else '',
-            user.current_employer_remarks,
-            str(user.current_employer_rating) if user.current_employer_rating else '',
-            user.emergency_contact_numbers,
-            user.family_members,
-            user.previous_employers,
-            user.qualifications
-        ]
+        row = []
+        
+        # Get latest card print info for this user
+        latest_card_print = CardPrint.objects.filter(user=user).order_by('-card_print_date').first()
+        card_print_count = CardPrint.objects.filter(user=user).count()
+        
+        for field in selected_fields:
+            if field == 'id':
+                row.append(user.id)
+            elif field == 'username':
+                row.append(user.username)
+            elif field == 'email':
+                row.append(user.email)
+            elif field == 'first_name':
+                row.append(user.first_name)
+            elif field == 'middle_name':
+                row.append(user.middle_name if user.middle_name else '')
+            elif field == 'last_name':
+                row.append(user.last_name)
+            elif field == 'user_type':
+                row.append(user.user_type)
+            elif field == 'status':
+                row.append(user.status)
+            elif field == 'is_verified':
+                row.append('1' if user.is_verified else '0')
+            elif field == 'is_required_profile_detail':
+                row.append('1' if not user.is_required_profile_detail else '0')
+            elif field == 'is_printed':
+                row.append('1' if user.is_printed else '0')
+            elif field == 'nationality':
+                row.append(user.nationality if user.nationality else '')
+            elif field == 'date_of_birth':
+                row.append(str(user.date_of_birth) if user.date_of_birth else '')
+            elif field == 'gsez_card_issue_date':
+                row.append(str(user.gsez_card_issue_date) if user.gsez_card_issue_date else '')
+            elif field == 'gsez_card_expiry_date':
+                row.append(str(user.gsez_card_expiry_date) if user.gsez_card_expiry_date else '')
+            elif field == 'gsezid':
+                row.append(user.gsezid if user.gsezid else '')
+            elif field == 'profile_full_link':
+                row.append(user.profile_full_link if user.profile_full_link else '')
+            elif field == 'employee_contact_number':
+                row.append(user.employee_contact_number if user.employee_contact_number else '')
+            elif field == 'qr_code':
+                row.append(user.qr_code if user.qr_code else '')
+            elif field == 'current_address':
+                row.append(user.current_address if user.current_address else '')
+            elif field == 'is_permanent':
+                row.append('1' if user.is_permanent else '0')
+            elif field == 'permanent_address':
+                row.append(user.permanent_address if user.permanent_address else '')
+            elif field == 'current_employer':
+                row.append(user.current_employer if user.current_employer else '')
+            elif field == 'current_employer_join_date':
+                row.append(str(user.current_employer_join_date) if user.current_employer_join_date else '')
+            elif field == 'current_employer_emp_code':
+                row.append(user.current_employer_emp_code if user.current_employer_emp_code else '')
+            elif field == 'current_employer_designation':
+                row.append(user.current_employer_designation if user.current_employer_designation else '')
+            elif field == 'current_employer_department':
+                row.append(user.current_employer_department if user.current_employer_department else '')
+            elif field == 'current_employer_company':
+                row.append(user.current_employer_company if user.current_employer_company else '')
+            elif field == 'current_employer_remarks':
+                row.append(user.current_employer_remarks)
+            elif field == 'current_employer_rating':
+                row.append(str(user.current_employer_rating) if user.current_employer_rating else '')
+            elif field == 'emergency_contact_numbers':
+                row.append(user.emergency_contact_numbers)
+            elif field == 'family_members':
+                row.append(user.family_members)
+            elif field == 'previous_employers':
+                row.append(user.previous_employers)
+            elif field == 'qualifications':
+                row.append(user.qualifications)
+            elif field == 'latest_card_print_date':
+                row.append(str(latest_card_print.card_print_date) if latest_card_print else '')
+            elif field == 'card_print_remarks':
+                row.append(latest_card_print.remarks if latest_card_print and latest_card_print.remarks else '')
+            elif field == 'card_print_count':
+                row.append(str(card_print_count))
         
         for col_num, cell_value in enumerate(row):
             ws.write(row_num, col_num, str(cell_value) if cell_value is not None else '')
@@ -1222,7 +1382,7 @@ def admin_export_users_template(request):
         'username', 'password', 'first_name', 'middle_name', 'last_name', 'email', 
         'user_type', 'status', 'is_verified', 'is_required_profile_detail', 'is_printed',
         'nationality', 'date_of_birth', 'gsez_card_issue_date', 'gsez_card_expiry_date', 'gsezid',
-        'profile_full_link', 'current_address', 'is_permanent', 'permanent_address', 
+        'profile_full_link', 'employee_contact_number', 'qr_code', 'current_address', 'is_permanent', 'permanent_address', 
         'current_employer', 'current_employer_join_date', 'current_employer_emp_code', 
         'current_employer_designation', 'current_employer_department', 'current_employer_company',
         'current_employer_remarks', 'current_employer_rating',
@@ -1241,7 +1401,7 @@ def admin_export_users_template(request):
         'Use: 1/0', 'Use: 1/0', 'Use: 1/0',
         'Optional', 'Use: YYYY-MM-DD or DD/MM/YYYY', 'Use: YYYY-MM-DD or DD/MM/YYYY', 
         'Use: YYYY-MM-DD or DD/MM/YYYY', 'Optional (auto-generated if blank)',
-        'Optional (e.g. http://207.108.234.113:83/GSEZID.jpg)', 'Optional', 'Use: 1/0', 'Optional',
+        'Optional (e.g. http://207.108.234.113:83/GSEZID.jpg)', 'Optional', 'Optional (auto-generated if blank)', 'Optional', 'Use: 1/0', 'Optional',
         'Optional', 'Use: YYYY-MM-DD or DD/MM/YYYY', 'Optional', 
         'Optional', 'Optional', 'Must exist in system',
         'Optional', 'Optional (number 1-5)',
@@ -1257,8 +1417,8 @@ def admin_export_users_template(request):
     example1 = [
         'john_doe', 'password123', 'John', '', 'Doe', 'john@example.com',
         'user', 'active', '1', '1', '0',
-        'Indian', '1990-01-01', '2023-01-01', '2025-01-01', '',
-        'http://207.108.234.113:83/ZIS2506000001.jpg', '123 Street, City', '0', '456 Street, City',
+        'Indian', '1990-01-01', '2023-01-01', '2025-01-01', 'ZIS2506000001',
+        'http://207.108.234.113:83/ZIS2506000001.jpg', '9876543210', 'http://207.180.234.113/IDCARD/ZIS2506000001', '123 Street, City', '0', '456 Street, City',
         'ACME Corp', '2022-01-01', 'EMP123', 
         'Developer', 'IT', 'Company Name',
         'Good employee', '4',
@@ -1274,8 +1434,8 @@ def admin_export_users_template(request):
     example2 = [
         'jane_smith', 'pass456', 'Jane', 'M', 'Smith', 'jane@example.com',
         'user', 'active', '0', '1', '0',
-        'American', '31/05/1992', '01.02.2023', '01-02-2025', '',
-        'http://207.108.234.113:83/ZIS2506000002.jpg', '789 Road, Town', '1', '789 Road, Town',
+        'American', '31/05/1992', '01.02.2023', '01-02-2025', 'ZIS2506000002',
+        'http://207.108.234.113:83/ZIS2506000002.jpg', '8765432109', 'http://207.180.234.113/IDCARD/ZIS2506000002', '789 Road, Town', '1', '789 Road, Town',
         'XYZ Ltd', '01/06/2021', 'XYZ456', 
         'Manager', 'HR', 'XYZ Company',
         'Excellent manager', '5',
@@ -1388,7 +1548,7 @@ def admin_import_users(request):
                         'middle_name', 'nationality', 'gsezid', 'current_address',
                         'permanent_address', 'current_employer', 'current_employer_emp_code',
                         'current_employer_designation', 'current_employer_department',
-                        'current_employer_remarks', 'profile_full_link'
+                        'current_employer_remarks', 'profile_full_link', 'employee_contact_number'
                     ]
                     
                     for field in optional_text_fields:
@@ -1586,6 +1746,9 @@ def admin_import_users(request):
                     # Generate GSEZ ID if not provided
                     if not user.gsezid:
                         user.gsezid = generate_gsezid()
+                    
+                    # Set the QR code URL using the GSEZ ID
+                    user.qr_code = f"http://207.180.234.113/IDCARD/{user.gsezid}"
                     
                     # Save the user
                     user.save()
@@ -2231,7 +2394,7 @@ def admin_import_documents(request):
                         'middle_name', 'nationality', 'gsezid', 'current_address',
                         'permanent_address', 'current_employer', 'current_employer_emp_code',
                         'current_employer_designation', 'current_employer_department',
-                        'current_employer_remarks', 'profile_full_link'
+                        'current_employer_remarks', 'profile_full_link', 'employee_contact_number'
                     ]
                     
                     for field in optional_text_fields:
@@ -2338,6 +2501,9 @@ def admin_import_documents(request):
                     if not user.gsezid:
                         user.gsezid = generate_gsezid()
                     
+                    # Set the QR code URL using the GSEZ ID
+                    user.qr_code = f"http://207.180.234.113/IDCARD/{user.gsezid}"
+                    
                     # Save the user
                     user.save()
                     success_count += 1
@@ -2352,3 +2518,87 @@ def admin_import_documents(request):
         return redirect('admin_manage_users')
     
     return render(request, 'core/admin/import_users.html')
+
+@login_required
+@user_passes_test(is_admin)
+def admin_add_card_print(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        # Debug information
+        print("POST data received:", request.POST)
+        
+        form = CardPrintForm(request.POST)
+        if form.is_valid():
+            print("Form is valid")
+            card_print = form.save(commit=False)
+            card_print.user = user
+            card_print.gsezid = user.gsezid or ''
+            card_print.save()
+            print("Card print saved with ID:", card_print.id)
+            
+            # Update user's is_printed status
+            if not user.is_printed:
+                user.is_printed = True
+                user.save()
+                print("User is_printed set to True")
+                
+            messages.success(request, 'Card print record added successfully.')
+        else:
+            print("Form errors:", form.errors)
+            messages.error(request, f'Error adding card print record: {form.errors}')
+    else:
+        print("Non-POST request received")
+    
+    return redirect('admin_user_detail', user_id=user_id)
+
+@login_required
+@user_passes_test(is_admin)
+def admin_edit_card_print(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        print_id = request.POST.get('print_id')
+        card_print = get_object_or_404(CardPrint, id=print_id, user=user)
+        
+        form = CardPrintForm(request.POST, instance=card_print)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Card print record updated successfully.')
+        else:
+            messages.error(request, 'Error updating card print record.')
+    
+    return redirect('admin_user_detail', user_id=user_id)
+
+@login_required
+@user_passes_test(is_admin)
+def admin_delete_card_print(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    
+    print("Delete card print function called for user_id:", user_id)
+    print("Request method:", request.method)
+    
+    if request.method == 'POST':
+        print_id = request.POST.get('print_id')
+        print("Received print_id:", print_id)
+        
+        try:
+            card_print = get_object_or_404(CardPrint, id=print_id, user=user)
+            print("Found card print with ID:", card_print.id)
+            card_print.delete()
+            print("Card print deleted successfully")
+            
+            # If no more card prints exist, update user's is_printed status
+            if not CardPrint.objects.filter(user=user).exists():
+                user.is_printed = False
+                user.save()
+                print("Updated user is_printed to False")
+                
+            messages.success(request, 'Card print record deleted successfully.')
+        except Exception as e:
+            print("Error deleting card print:", str(e))
+            messages.error(request, f'Error deleting card print: {str(e)}')
+    else:
+        print("Not a POST request")
+    
+    return redirect('admin_user_detail', user_id=user_id)

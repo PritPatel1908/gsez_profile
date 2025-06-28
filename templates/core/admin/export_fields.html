@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Select Export Fields - GSEZ Profile{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Select Export Fields</h2>
+        <p class="text-muted">Choose which fields to include in the exported report.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'admin_manage_users' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Users
+        </a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-file-export me-2"></i>Export Fields Selection</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{% url 'admin_export_users' %}">
+            {% csrf_token %}
+            
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Options</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="gsezid_filter" class="form-label">GSEZ ID</label>
+                            <input type="text" class="form-control" id="gsezid_filter" name="gsezid_filter" placeholder="Filter by GSEZ ID">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="company_filter" class="form-label">Company</label>
+                            <select class="form-select" id="company_filter" name="company_filter">
+                                <option value="">All Companies</option>
+                                {% for company in companies %}
+                                    <option value="{{ company }}">{{ company }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="card_print_start_date" class="form-label">Card Print Date From</label>
+                            <input type="date" class="form-control" id="card_print_start_date" name="card_print_start_date">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="card_print_end_date" class="form-label">Card Print Date To</label>
+                            <input type="date" class="form-control" id="card_print_end_date" name="card_print_end_date">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="select-all-fields">
+                        <label class="form-check-label fw-bold" for="select-all-fields">
+                            Select/Deselect All Fields
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Basic Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="id" id="field-id" checked>
+                                <label class="form-check-label" for="field-id">ID</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="username" id="field-username" checked>
+                                <label class="form-check-label" for="field-username">Username</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="email" id="field-email" checked>
+                                <label class="form-check-label" for="field-email">Email</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="first_name" id="field-first-name" checked>
+                                <label class="form-check-label" for="field-first-name">First Name</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="middle_name" id="field-middle-name" checked>
+                                <label class="form-check-label" for="field-middle-name">Middle Name</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="last_name" id="field-last-name" checked>
+                                <label class="form-check-label" for="field-last-name">Last Name</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="user_type" id="field-user-type" checked>
+                                <label class="form-check-label" for="field-user-type">User Type</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="status" id="field-status" checked>
+                                <label class="form-check-label" for="field-status">Status</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Personal Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="is_verified" id="field-is-verified" checked>
+                                <label class="form-check-label" for="field-is-verified">Is Verified</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="is_required_profile_detail" id="field-is-profile-complete" checked>
+                                <label class="form-check-label" for="field-is-profile-complete">Is Profile Complete</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="is_printed" id="field-is-printed" checked>
+                                <label class="form-check-label" for="field-is-printed">Is Printed</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="nationality" id="field-nationality" checked>
+                                <label class="form-check-label" for="field-nationality">Nationality</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="date_of_birth" id="field-date-of-birth" checked>
+                                <label class="form-check-label" for="field-date-of-birth">Date of Birth</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="gsez_card_issue_date" id="field-gsez-card-issue-date" checked>
+                                <label class="form-check-label" for="field-gsez-card-issue-date">GSEZ Card Issue Date</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="gsez_card_expiry_date" id="field-gsez-card-expiry-date" checked>
+                                <label class="form-check-label" for="field-gsez-card-expiry-date">GSEZ Card Expiry Date</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="gsezid" id="field-gsezid" checked>
+                                <label class="form-check-label" for="field-gsezid">GSEZ ID</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="profile_full_link" id="field-profile-full-link" checked>
+                                <label class="form-check-label" for="field-profile-full-link">Profile Full Link</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="employee_contact_number" id="field-employee-contact-number" checked>
+                                <label class="form-check-label" for="field-employee-contact-number">Employee Contact Number</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="qr_code" id="field-qr-code" checked>
+                                <label class="form-check-label" for="field-qr-code">QR Code</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Address Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="current_address" id="field-current-address" checked>
+                                <label class="form-check-label" for="field-current-address">Current Address</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="is_permanent" id="field-is-permanent" checked>
+                                <label class="form-check-label" for="field-is-permanent">Is Permanent</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="permanent_address" id="field-permanent-address" checked>
+                                <label class="form-check-label" for="field-permanent-address">Permanent Address</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Employment Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="current_employer" id="field-current-employer" checked>
+                                <label class="form-check-label" for="field-current-employer">Current Employer</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="current_employer_join_date" id="field-join-date" checked>
+                                <label class="form-check-label" for="field-join-date">Join Date</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="current_employer_emp_code" id="field-employee-code" checked>
+                                <label class="form-check-label" for="field-employee-code">Employee Code</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="current_employer_designation" id="field-designation" checked>
+                                <label class="form-check-label" for="field-designation">Designation</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="current_employer_department" id="field-department" checked>
+                                <label class="form-check-label" for="field-department">Department</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="current_employer_company" id="field-company" checked>
+                                <label class="form-check-label" for="field-company">Company</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="current_employer_remarks" id="field-remarks" checked>
+                                <label class="form-check-label" for="field-remarks">Remarks</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="current_employer_rating" id="field-rating" checked>
+                                <label class="form-check-label" for="field-rating">Rating</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Additional Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="emergency_contact_numbers" id="field-emergency-contacts" checked>
+                                <label class="form-check-label" for="field-emergency-contacts">Emergency Contacts</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="family_members" id="field-family-members" checked>
+                                <label class="form-check-label" for="field-family-members">Family Members</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="previous_employers" id="field-previous-employers" checked>
+                                <label class="form-check-label" for="field-previous-employers">Previous Employers</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="qualifications" id="field-qualifications" checked>
+                                <label class="form-check-label" for="field-qualifications">Qualifications</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Card Print Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="latest_card_print_date" id="field-card-print-date" checked>
+                                <label class="form-check-label" for="field-card-print-date">Latest Card Print Date</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="card_print_remarks" id="field-card-print-remarks" checked>
+                                <label class="form-check-label" for="field-card-print-remarks">Card Print Remarks</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input field-checkbox" type="checkbox" name="fields" value="card_print_count" id="field-card-print-count" checked>
+                                <label class="form-check-label" for="field-card-print-count">Card Print Count</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-file-export me-2"></i>Export Selected Fields
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAllCheckbox = document.getElementById('select-all-fields');
+        const fieldCheckboxes = document.querySelectorAll('.field-checkbox');
+        
+        // Select/deselect all fields
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            fieldCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+        });
+        
+        // Update select all checkbox state based on individual checkboxes
+        function updateSelectAllCheckbox() {
+            const checkedCount = document.querySelectorAll('.field-checkbox:checked').length;
+            selectAllCheckbox.checked = checkedCount === fieldCheckboxes.length;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < fieldCheckboxes.length;
+        }
+        
+        // Add event listeners to all field checkboxes
+        fieldCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectAllCheckbox);
+        });
+        
+        // Initialize select all checkbox state
+        updateSelectAllCheckbox();
+    });
+</script>
+{% endblock %}

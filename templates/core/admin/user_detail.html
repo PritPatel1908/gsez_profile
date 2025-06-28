@@ -43,9 +43,9 @@
                 
                 {% if user_obj.gsezid %}
                 <div class="mt-3">
-                    <a href="http://207.180.234.113/IDCARD/{{ user_obj.gsezid }}" target="_blank" class="btn btn-success">
-                        <i class="fas fa-id-card me-2"></i>View ID Card
-                    </a>
+                                    <a href="http://207.180.234.113/IDCARD/{{ user_obj.gsezid }}" target="_blank" rel="noopener noreferrer" class="btn btn-success">
+                    <i class="fas fa-id-card me-2"></i>View ID Card
+                </a>
                 </div>
                 {% endif %}
                 
@@ -246,7 +246,7 @@
                                     <td>{{ doc.govt_id_number }}</td>
                                     <td>
                                         {% if doc.govt_id_photo %}
-                                            <a href="{{ doc.govt_id_photo.url }}" target="_blank" class="btn btn-sm btn-info" title="View Document">
+                                            <a href="{{ doc.govt_id_photo.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-info" title="View Document">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                         {% else %}
@@ -262,6 +262,207 @@
                 {% endif %}
             </div>
         </div>
+        
+        <div class="card shadow mt-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Card Print History</h5>
+            </div>
+            <div class="card-body">
+                <!-- Direct form for adding card print record -->
+                <form method="post" action="{% url 'admin_add_card_print' user_obj.id %}" class="mb-4 p-3 border rounded bg-light">
+                    {% csrf_token %}
+                    <h6 class="mb-3">Add New Print Record</h6>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="mb-3">
+                                <label for="card_print_date" class="form-label">Print Date</label>
+                                <input type="date" class="form-control" id="card_print_date" name="card_print_date" required value="{% now 'Y-m-d' %}">
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="mb-3">
+                                <label for="remarks" class="form-label">Remarks</label>
+                                <input type="text" class="form-control" id="remarks" name="remarks">
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Add Record</button>
+                        </div>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                {% if card_prints %}
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Print Date</th>
+                                <th>GSEZ ID</th>
+                                <th>Remarks</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for print in card_prints %}
+                                <tr>
+                                    <td>{{ print.card_print_date }}</td>
+                                    <td>{{ print.gsezid }}</td>
+                                    <td>{{ print.remarks|default:"" }}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-primary edit-print" 
+                                                data-id="{{ print.id }}" 
+                                                data-date="{{ print.card_print_date|date:'Y-m-d' }}" 
+                                                data-remarks="{{ print.remarks|default:'' }}"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#editCardPrintModal"
+                                                title="Edit print record">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger delete-btn" 
+                                                onclick="confirmDelete('{{ print.id }}', '{{ user_obj.id }}')"
+                                                title="Delete print record">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No card print records found.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="text-muted text-center">No card print records found.</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
-{% endblock %} 
+
+
+
+<!-- Edit Card Print Modal -->
+<div class="modal fade" id="editCardPrintModal" tabindex="-1" aria-labelledby="editCardPrintModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'admin_edit_card_print' user_obj.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="print_id" id="edit_print_id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editCardPrintModalLabel">Edit Card Print Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_card_print_date" class="form-label">Print Date</label>
+                        <input type="date" class="form-control" id="edit_card_print_date" name="card_print_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_remarks" class="form-label">Remarks</label>
+                        <textarea class="form-control" id="edit_remarks" name="remarks" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this card print record?</p>
+                <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirmDeleteButton" class="btn btn-danger">Delete Record</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden delete form -->
+<form id="delete-print-form" method="post" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="print_id" id="delete-print-id">
+</form>
+
+{% block extra_js %}
+<script>
+    // Global variables for delete operation
+    let currentPrintId = null;
+    let currentUserId = null;
+    
+    // Function to handle delete confirmation
+    function confirmDelete(printId, userId) {
+        // Store the IDs for later use
+        currentPrintId = printId;
+        currentUserId = userId;
+        
+        // Set up the modal
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+        
+        // Show the modal
+        deleteModal.show();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set today's date as default for the card print date field
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Initialize the date field right away
+        const cardPrintDateField = document.getElementById('card_print_date');
+        if (cardPrintDateField) {
+            cardPrintDateField.value = today;
+        }
+        
+        // Edit card print modal
+        const editButtons = document.querySelectorAll('.edit-print');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const date = this.getAttribute('data-date');
+                const remarks = this.getAttribute('data-remarks');
+                
+                document.getElementById('edit_print_id').value = id;
+                document.getElementById('edit_card_print_date').value = date;
+                document.getElementById('edit_remarks').value = remarks;
+            });
+        });
+        
+        // Handle delete confirmation button click
+        const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+        if (confirmDeleteButton) {
+            confirmDeleteButton.addEventListener('click', function() {
+                if (currentPrintId && currentUserId) {
+                    // Get the form and set its properties
+                    const deleteForm = document.getElementById('delete-print-form');
+                    deleteForm.action = `/admin/users/card-print/delete/${currentUserId}/`;
+                    document.getElementById('delete-print-id').value = currentPrintId;
+                    
+                    // Submit the form
+                    console.log('Submitting delete form for print ID:', currentPrintId);
+                    deleteForm.submit();
+                } else {
+                    console.error('Missing print ID or user ID for delete operation');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock content %}

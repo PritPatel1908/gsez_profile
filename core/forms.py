@@ -1,9 +1,11 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, AuthenticationForm
-from .models import User, Document, Company, generate_gsezid
+from .models import User, Document, Company, generate_gsezid, CardPrint
 from django.core.exceptions import ValidationError
 import json
 from django.contrib.auth import authenticate
+from django.utils import timezone
+from datetime import date, timedelta
 
 class CustomAuthenticationForm(AuthenticationForm):
     username = forms.CharField(
@@ -223,12 +225,20 @@ class UserProfileForm(forms.ModelForm):
         # Make username field readonly but not disabled so it can be submitted
         if 'username' in self.fields:
             self.fields['username'].widget.attrs.update({'readonly': 'readonly'})
+            
+        # If gsez_card_issue_date is not set, set it to today
+        if not self.instance.gsez_card_issue_date:
+            today = date.today()
+            expiry_date = today + timedelta(days=365)  # 1 year from today
+            
+            self.fields['gsez_card_issue_date'].initial = today
+            self.fields['gsez_card_expiry_date'].initial = expiry_date
 
     class Meta:
         model = User
         fields = ('first_name', 'middle_name', 'last_name', 'email', 'username', 'nationality', 
                  'date_of_birth', 'gsez_card_issue_date', 'gsez_card_expiry_date', 
-                 'profile_photo', 'current_address', 'is_permanent', 'permanent_address',
+                 'profile_photo', 'employee_contact_number', 'current_address', 'is_permanent', 'permanent_address',
                  'current_employer', 'current_employer_join_date', 'current_employer_emp_code',
                  'current_employer_designation', 'current_employer_department', 'current_employer_company',
                  'current_employer_remarks', 'current_employer_rating')
@@ -239,11 +249,13 @@ class UserProfileForm(forms.ModelForm):
             'middle_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
             'nationality': forms.TextInput(attrs={'class': 'form-control'}),
             'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'gsez_card_issue_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'gsez_card_issue_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'onchange': 'updateExpiryDate()'}),
             'gsez_card_expiry_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'profile_photo': forms.FileInput(attrs={'class': 'form-control'}),
+            'employee_contact_number': forms.TextInput(attrs={'class': 'form-control'}),
             'current_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'permanent_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'current_employer': forms.TextInput(attrs={'class': 'form-control'}),
@@ -372,6 +384,8 @@ class AdminUserEditForm(forms.ModelForm):
             # Personal Information
             'nationality', 'date_of_birth', 'gsezid', 
             'gsez_card_issue_date', 'gsez_card_expiry_date', 'profile_photo', 'profile_full_link',
+            # Contact Information
+            'employee_contact_number',
             # Address Information
             'current_address', 'is_permanent', 'permanent_address',
             # Current Employment
@@ -392,10 +406,12 @@ class AdminUserEditForm(forms.ModelForm):
             'nationality': forms.TextInput(attrs={'class': 'form-control'}),
             'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'gsezid': forms.TextInput(attrs={'class': 'form-control'}),
-            'gsez_card_issue_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'gsez_card_issue_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'onchange': 'updateExpiryDate()'}),
             'gsez_card_expiry_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'profile_photo': forms.FileInput(attrs={'class': 'form-control'}),
             'profile_full_link': forms.TextInput(attrs={'class': 'form-control'}),
+            # Contact Information
+            'employee_contact_number': forms.TextInput(attrs={'class': 'form-control'}),
             # Address Information
             'current_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'permanent_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -442,6 +458,14 @@ class AdminUserEditForm(forms.ModelForm):
         
         # Make username field readonly but not disabled so it can be submitted with form
         self.fields['username'].widget.attrs.update({'readonly': 'readonly'})
+        
+        # If gsez_card_issue_date is not set, set it to today
+        if not self.instance.gsez_card_issue_date:
+            today = date.today()
+            expiry_date = today + timedelta(days=365)  # 1 year from today
+            
+            self.fields['gsez_card_issue_date'].initial = today
+            self.fields['gsez_card_expiry_date'].initial = expiry_date
     
     def save(self, commit=True):
         instance = super(AdminUserEditForm, self).save(commit=False)
@@ -533,6 +557,8 @@ class AdminUserCreationForm(UserCreationForm):
             # Personal Information
             'nationality', 'date_of_birth', 'gsezid', 
             'gsez_card_issue_date', 'gsez_card_expiry_date', 'profile_photo', 'profile_full_link',
+            # Contact Information
+            'employee_contact_number',
             # Address Information
             'current_address', 'is_permanent', 'permanent_address',
             # Current Employment
@@ -553,10 +579,12 @@ class AdminUserCreationForm(UserCreationForm):
             'nationality': forms.TextInput(attrs={'class': 'form-control'}),
             'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'gsezid': forms.TextInput(attrs={'class': 'form-control'}),
-            'gsez_card_issue_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'gsez_card_issue_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'onchange': 'updateExpiryDate()'}),
             'gsez_card_expiry_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'profile_photo': forms.FileInput(attrs={'class': 'form-control'}),
             'profile_full_link': forms.TextInput(attrs={'class': 'form-control'}),
+            # Contact Information
+            'employee_contact_number': forms.TextInput(attrs={'class': 'form-control'}),
             # Address Information
             'current_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'permanent_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -604,6 +632,13 @@ class AdminUserCreationForm(UserCreationForm):
         for field in self.fields:
             if field not in ['username', 'password1', 'password2']:
                 self.fields[field].required = False
+        
+        # Set default values for card issue and expiry dates
+        today = date.today()
+        expiry_date = today + timedelta(days=365)  # 1 year from today
+        
+        self.fields['gsez_card_issue_date'].initial = today
+        self.fields['gsez_card_expiry_date'].initial = expiry_date
                 
         # Check if this is a first employee (will be set from view context)
         # This won't modify the widget here, but will be used in the template
@@ -690,3 +725,18 @@ class AdminUserCreationForm(UserCreationForm):
             user.save()
 
         return user
+
+class CardPrintForm(forms.ModelForm):
+    card_print_date = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        required=True,
+        initial=timezone.now
+    )
+    remarks = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+        required=False
+    )
+    
+    class Meta:
+        model = CardPrint
+        fields = ['card_print_date', 'remarks']

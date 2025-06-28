@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 import qrcode
 from io import BytesIO
 from django.core.files import File
@@ -140,6 +141,7 @@ class User(AbstractUser):
     profile_full_link = models.CharField(max_length=255, blank=True, null=True)
     
     # Contact Information - Using TextField with JSON serialization instead of JSONField
+    employee_contact_number = models.CharField(max_length=20, blank=True, null=True)
     emergency_contact_numbers = models.TextField(blank=True, null=True)
     family_members = models.TextField(blank=True, null=True)  # Will store JSON string of list of dicts with name, relation, number
     
@@ -167,7 +169,7 @@ class User(AbstractUser):
     # Status and Verification
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     is_verified = models.BooleanField(default=False)
-    qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    qr_code = models.CharField(max_length=255, blank=True, null=True)
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='user')
     is_required_profile_detail = models.BooleanField(default=True)
     is_printed = models.BooleanField(default=False)
@@ -227,3 +229,15 @@ class Document(models.Model):
     
     def __str__(self):
         return f"Document for {self.user}"
+
+class CardPrint(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='card_prints')
+    gsezid = models.CharField(max_length=50)
+    card_print_date = models.DateField(default=timezone.now)
+    remarks = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"Card Print for {self.user.get_full_name()} ({self.card_print_date})"
+    
+    class Meta:
+        ordering = ['-card_print_date']

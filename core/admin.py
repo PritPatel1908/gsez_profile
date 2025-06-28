@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Company, Document
+from .models import User, Company, Document, CardPrint
 
 class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'first_name', 'last_name', 'gsezid', 'user_type', 'status', 'is_verified')
@@ -46,6 +46,13 @@ class CompanyAdmin(admin.ModelAdmin):
     list_display = ('company_name',)
     search_fields = ('company_name',)
 
+class CardPrintAdmin(admin.ModelAdmin):
+    list_display = ('user', 'gsezid', 'card_print_date', 'remarks')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'gsezid')
+    list_filter = ('card_print_date',)
+    date_hierarchy = 'card_print_date'
+
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Document, DocumentAdmin)
 admin.site.register(Company, CompanyAdmin)
+admin.site.register(CardPrint, CardPrintAdmin)

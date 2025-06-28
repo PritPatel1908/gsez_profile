@@ -166,6 +166,29 @@
                 initializeModals();
             }
         });
+        
+        // Function to update expiry date based on issue date
+        function updateExpiryDate() {
+            const issueDate = document.querySelector('input[name="gsez_card_issue_date"]');
+            const expiryDate = document.querySelector('input[name="gsez_card_expiry_date"]');
+            
+            if (issueDate && issueDate.value && expiryDate) {
+                // Parse the issue date
+                const issueDateObj = new Date(issueDate.value);
+                
+                // Add 1 year to the issue date
+                const expiryDateObj = new Date(issueDateObj);
+                expiryDateObj.setFullYear(expiryDateObj.getFullYear() + 1);
+                
+                // Format the date as YYYY-MM-DD for the input
+                const year = expiryDateObj.getFullYear();
+                const month = String(expiryDateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(expiryDateObj.getDate()).padStart(2, '0');
+                
+                // Set the expiry date
+                expiryDate.value = `${year}-${month}-${day}`;
+            }
+        }
     </script>
     
     {% block extra_js %}{% endblock %}
