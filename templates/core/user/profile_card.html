@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Your ID Card - GSEZ Profile{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Your ID Card</h2>
+            <p class="text-muted">This is your official GSEZ ID card</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'user_dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">GSEZ IDENTIFICATION CARD</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Left side - Photo only (QR code removed) -->
+                        <div class="col-md-4 text-center mb-3 mb-md-0">
+                            {% if user.profile_photo %}
+                                <img src="{{ user.profile_photo.url }}" alt="Profile Photo" class="img-fluid rounded mb-3" style="max-width: 180px;">
+                            {% else %}
+                                <div class="rounded bg-light d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 180px; height: 180px;">
+                                    <i class="fas fa-user fa-5x text-secondary"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Right side - User details -->
+                        <div class="col-md-8">
+                            <h3 class="mb-3">{{ user.get_full_name }}</h3>
+                            
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">GSEZ ID:</div>
+                                <div class="col-sm-8">{{ user.gsezid }}</div>
+                            </div>
+                            
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">Nationality:</div>
+                                <div class="col-sm-8">{{ user.nationality|default:"Not specified" }}</div>
+                            </div>
+                            
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">Date of Birth:</div>
+                                <div class="col-sm-8">{{ user.date_of_birth|date:"M d, Y"|default:"Not specified" }}</div>
+                            </div>
+                            
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">Mobile:</div>
+                                <div class="col-sm-8">{{ user.mobile_number|default:"Not specified" }}</div>
+                            </div>
+                            
+                            <hr class="my-3">
+                            <h5 class="mb-3">Employment Details</h5>
+                            
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">Company:</div>
+                                <div class="col-sm-8">{% if user.current_employer_company %}{{ user.current_employer_company.company_name }}{% else %}{{ user.current_employer|default:"Not specified" }}{% endif %}</div>
+                            </div>
+                            
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">Designation:</div>
+                                <div class="col-sm-8">{{ user.current_employer_designation|default:"Not specified" }}</div>
+                            </div>
+                            
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">Department:</div>
+                                <div class="col-sm-8">{{ user.current_employer_department|default:"Not specified" }}</div>
+                            </div>
+                            
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">Join Date:</div>
+                                <div class="col-sm-8">{{ user.current_employer_join_date|date:"M d, Y"|default:"Not specified" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <p class="text-muted small mb-0">Card Issue Date: {{ user.gsez_card_issue_date|date:"M d, Y"|default:"Not specified" }}</p>
+                        <p class="text-muted small">Card Valid Until: {{ user.gsez_card_expiry_date|date:"M d, Y"|default:"Not specified" }}</p>
+                    </div>
+                </div>
+                <div class="card-footer bg-light text-center">
+                    <p class="mb-2">
+                        <a href="{% url 'idcard' user.gsezid %}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-external-link-alt me-2"></i>Open Public Card View
+                        </a>
+                    </p>
+                    <small class="text-muted">This is an official GSEZ identification card. If found, please return to GSEZ administration.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Print and download options -->
+    <div class="row mt-4 justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="btn-group">
+                        <button onclick="window.print()" class="btn btn-primary">
+                            <i class="fas fa-print me-2"></i>Print ID Card
+                        </button>
+                        <!-- In a real application, you might want to add PDF download functionality -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

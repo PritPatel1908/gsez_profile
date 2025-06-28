@@ -1,0 +1,829 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create User - GSEZ Profile{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Create New User</h2>
+        <p class="text-muted">Add a new user to the system.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'admin_manage_users' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Users
+        </a>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="createUserForm">
+    {% csrf_token %}
+    <!-- Hidden input for camera capture data -->
+    <input type="hidden" id="camera_capture_data" name="camera_capture_data" value="">
+    
+    <!-- Basic Information Card -->
+    <div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Basic Information</h5>
+    </div>
+    <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+                    <input type="text" id="{{ form.username.id_for_label }}" name="username" class="form-control" readonly>
+                    {% if form.username.errors %}
+                        <div class="text-danger">{{ form.username.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="text-danger">{{ form.email.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.gsezid.id_for_label }}" class="form-label">GSEZ ID</label>
+                    <input type="text" name="gsezid" id="{{ form.gsezid.id_for_label }}" value="{{ next_gsez_id }}" class="form-control" readonly>
+                    {% if form.gsezid.errors %}
+                        <div class="text-danger">{{ form.gsezid.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <div class="text-danger">{{ form.first_name.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.middle_name.id_for_label }}" class="form-label">Middle Name</label>
+                    {{ form.middle_name }}
+                    {% if form.middle_name.errors %}
+                        <div class="text-danger">{{ form.middle_name.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <div class="text-danger">{{ form.last_name.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="allowLoginToggle">
+                        <label class="form-check-label" for="allowLoginToggle">Allow Login</label>
+                        <input type="hidden" name="allow_login" id="allowLoginValue" value="false">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row" id="passwordFieldsContainer">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        <div class="text-danger">{{ form.password1.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <div class="text-danger">{{ form.password2.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Personal Information Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Personal Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.nationality.id_for_label }}" class="form-label">Nationality</label>
+                    {{ form.nationality }}
+                    {% if form.nationality.errors %}
+                        <div class="text-danger">{{ form.nationality.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of Birth</label>
+                    {{ form.date_of_birth }}
+                    {% if form.date_of_birth.errors %}
+                        <div class="text-danger">{{ form.date_of_birth.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.profile_photo.id_for_label }}" class="form-label">Profile Photo</label>
+                    <div class="mb-2">
+                        <button type="button" class="btn btn-sm btn-secondary" id="openCameraBtn">
+                            <i class="fas fa-camera"></i> Capture Photo
+                        </button>
+                    </div>
+                    {{ form.profile_photo }}
+                    {% if form.profile_photo.errors %}
+                        <div class="text-danger">{{ form.profile_photo.errors }}</div>
+                    {% endif %}
+                    <div class="mt-2">
+                        <img id="previewPhoto" src="#" alt="Preview" class="img-thumbnail mt-2" style="max-height: 100px; display: none;">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Camera Modal -->
+            <div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="cameraModalLabel"><i class="fas fa-camera"></i> Capture Profile Photo</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-0">
+                            <!-- Camera Controls -->
+                            <div class="bg-light p-3 mb-0 text-center">
+                                <button id="switchCameraBtn" class="btn btn-info me-2">
+                                    <i class="fas fa-sync"></i> Switch Camera
+                                </button>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-circle me-1"></i> Camera Active
+                                </span>
+                            </div>
+                            
+                            <div class="position-relative">
+                                <!-- Video Container with Centered Content and Overlay -->
+                                <div class="video-container p-0 text-center bg-dark">
+                                    <video id="cameraFeed" style="width: 100%; max-height: 500px; object-fit: cover;" autoplay></video>
+                                    <!-- Overlay Guide -->
+                                    <div id="faceOverlay" class="position-absolute top-50 start-50 translate-middle" style="border: 2px dashed rgba(255,255,255,0.5); border-radius: 50%; width: 200px; height: 200px; pointer-events: none; display: flex; align-items: center; justify-content: center;">
+                                        <div class="text-white bg-dark bg-opacity-50 px-2 py-1 rounded">
+                                            <small>Position face here</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Canvas for Captured Photo -->
+                                <canvas id="photoCanvas" style="display: none; width: 100%; max-height: 500px; object-fit: cover;" class="bg-dark"></canvas>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="p-3 bg-light d-flex justify-content-center">
+                                <button type="button" class="btn btn-lg btn-primary px-4" id="captureBtn">
+                                    <i class="fas fa-camera"></i> Take Photo
+                                </button>
+                                <button type="button" class="btn btn-lg btn-secondary px-4 mx-2" id="retakeBtn" style="display: none;">
+                                    <i class="fas fa-redo"></i> Retake
+                                </button>
+                                <button type="button" class="btn btn-lg btn-success px-4" id="savePhotoBtn" style="display: none;">
+                                    <i class="fas fa-check"></i> Use Photo
+                                </button>
+                            </div>
+                            
+                            <!-- Instructions -->
+                            <div class="p-3 border-top">
+                                <h6 class="text-muted"><i class="fas fa-info-circle"></i> Tips for a good photo:</h6>
+                                <ul class="text-muted small mb-0">
+                                    <li>Ensure your face is well-lit and clearly visible</li>
+                                    <li>Position your face inside the circle guide</li>
+                                    <li>Look directly at the camera</li>
+                                    <li>If you have trouble, try switching cameras or adjusting lighting</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.gsez_card_issue_date.id_for_label }}" class="form-label">GSEZ Card Issue Date</label>
+                    {{ form.gsez_card_issue_date }}
+                    {% if form.gsez_card_issue_date.errors %}
+                        <div class="text-danger">{{ form.gsez_card_issue_date.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.gsez_card_expiry_date.id_for_label }}" class="form-label">GSEZ Card Expiry Date</label>
+                    {{ form.gsez_card_expiry_date }}
+                    {% if form.gsez_card_expiry_date.errors %}
+                        <div class="text-danger">{{ form.gsez_card_expiry_date.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Address Information Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Address Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="{{ form.current_address.id_for_label }}" class="form-label">Current Address</label>
+                {{ form.current_address }}
+                {% if form.current_address.errors %}
+                    <div class="text-danger">{{ form.current_address.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3 form-check">
+                <input type="checkbox" name="is_permanent" id="{{ form.is_permanent.id_for_label }}" class="form-check-input" checked>
+                <label class="form-check-label" for="{{ form.is_permanent.id_for_label }}">
+                    Same as Permanent Address
+                </label>
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.permanent_address.id_for_label }}" class="form-label">Permanent Address</label>
+                {{ form.permanent_address }}
+                {% if form.permanent_address.errors %}
+                    <div class="text-danger">{{ form.permanent_address.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Emergency Contacts Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Emergency Contacts</h5>
+            <button type="button" class="btn btn-sm btn-light" id="addEmergencyContact">
+                <i class="fas fa-plus"></i> Add Contact
+            </button>
+        </div>
+        <div class="card-body">
+            <!-- Table for displaying emergency contacts, initially empty -->
+            <div class="table-responsive mb-3" id="emergencyContactsTableContainer" style="display: none;">
+                <table class="table table-bordered" id="emergencyContactsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact Number</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Contacts will be added here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-muted mb-3" id="noContactsMessage">No emergency contacts added yet.</p>
+            
+            <!-- Default emergency contact form fields -->
+            <div class="emergency-contact-row mb-3">
+                <div class="row">
+                    <div class="col-md-5">
+                        <label for="{{ form.emergency_contact_name.id_for_label }}" class="form-label">Contact Name</label>
+                        {{ form.emergency_contact_name }}
+                    </div>
+                    <div class="col-md-5">
+                        <label for="{{ form.emergency_contact_number.id_for_label }}" class="form-label">Contact Number</label>
+                        {{ form.emergency_contact_number }}
+                    </div>
+                    <div class="col-md-2">
+                        <!-- No remove button for first row -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Container for dynamically added emergency contacts -->
+            <div id="emergencyContactsContainer">
+                <!-- Additional emergency contacts will be added here via JavaScript -->
+            </div>
+            
+            <!-- Hidden template for new emergency contact rows -->
+            <template id="emergencyContactTemplate">
+                <div class="emergency-contact-row mb-3 border-top pt-3 mt-3">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Contact Name</label>
+                            <input type="text" name="emergency_contact_name_extra[]" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Contact Number</label>
+                            <input type="text" name="emergency_contact_number_extra[]" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 text-end">
+                            <button type="button" class="btn btn-sm btn-danger remove-row">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+    
+    <!-- Family Members Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Family Members</h5>
+            <button type="button" class="btn btn-sm btn-light" id="addFamilyMember">
+                <i class="fas fa-plus"></i> Add Member
+            </button>
+        </div>
+        <div class="card-body">
+            <!-- Default family member form fields -->
+            <div class="family-member-row mb-3">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="{{ form.family_member_name.id_for_label }}" class="form-label">Name</label>
+                        {{ form.family_member_name }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.family_member_relation.id_for_label }}" class="form-label">Relation</label>
+                        {{ form.family_member_relation }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.family_member_number.id_for_label }}" class="form-label">Contact Number</label>
+                        {{ form.family_member_number }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Container for dynamically added family members -->
+            <div id="familyMembersContainer">
+                <!-- Additional family members will be added here via JavaScript -->
+            </div>
+            
+            <!-- Hidden template for new family member rows -->
+            <template id="familyMemberTemplate">
+                <div class="family-member-row mb-3 border-top pt-3 mt-3">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="family_member_name_extra[]" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Relation</label>
+                            <input type="text" name="family_member_relation_extra[]" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Contact Number</label>
+                            <input type="text" name="family_member_number_extra[]" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 text-end">
+                            <button type="button" class="btn btn-sm btn-danger remove-row">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+    
+    <!-- Current Employment Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Current Employment</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.current_employer.id_for_label }}" class="form-label">Current Employer</label>
+                    {{ form.current_employer }}
+                    {% if form.current_employer.errors %}
+                        <div class="text-danger">{{ form.current_employer.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.current_employer_company.id_for_label }}" class="form-label">Company</label>
+                    {{ form.current_employer_company }}
+                    {% if form.current_employer_company.errors %}
+                        <div class="text-danger">{{ form.current_employer_company.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.current_employer_join_date.id_for_label }}" class="form-label">Join Date</label>
+                    {{ form.current_employer_join_date }}
+                    {% if form.current_employer_join_date.errors %}
+                        <div class="text-danger">{{ form.current_employer_join_date.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.current_employer_emp_code.id_for_label }}" class="form-label">Employee Code</label>
+                    {{ form.current_employer_emp_code }}
+                    {% if form.current_employer_emp_code.errors %}
+                        <div class="text-danger">{{ form.current_employer_emp_code.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.current_employer_rating.id_for_label }}" class="form-label">Rating (1-5)</label>
+                    {{ form.current_employer_rating }}
+                    {% if form.current_employer_rating.errors %}
+                        <div class="text-danger">{{ form.current_employer_rating.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.current_employer_designation.id_for_label }}" class="form-label">Designation</label>
+                    {{ form.current_employer_designation }}
+                    {% if form.current_employer_designation.errors %}
+                        <div class="text-danger">{{ form.current_employer_designation.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.current_employer_department.id_for_label }}" class="form-label">Department</label>
+                    {{ form.current_employer_department }}
+                    {% if form.current_employer_department.errors %}
+                        <div class="text-danger">{{ form.current_employer_department.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.current_employer_remarks.id_for_label }}" class="form-label">Remarks</label>
+                {{ form.current_employer_remarks }}
+                {% if form.current_employer_remarks.errors %}
+                    <div class="text-danger">{{ form.current_employer_remarks.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Previous Employment Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Previous Employment</h5>
+            <button type="button" class="btn btn-sm btn-light" id="addPreviousEmployer">
+                <i class="fas fa-plus"></i> Add Previous Employer
+            </button>
+        </div>
+        <div class="card-body">
+            <!-- Default previous employer form fields -->
+            <div class="previous-employer-row mb-4">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="{{ form.previous_employer_name.id_for_label }}" class="form-label">Company Name</label>
+                        {{ form.previous_employer_name }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.previous_employer_join_date.id_for_label }}" class="form-label">Join Date</label>
+                        {{ form.previous_employer_join_date }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.previous_employer_leave_date.id_for_label }}" class="form-label">Leave Date</label>
+                        {{ form.previous_employer_leave_date }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-8">
+                        <label for="{{ form.previous_employer_remarks.id_for_label }}" class="form-label">Remarks</label>
+                        {{ form.previous_employer_remarks }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.previous_employer_rating.id_for_label }}" class="form-label">Rating (1-5)</label>
+                        {{ form.previous_employer_rating }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Container for dynamically added previous employers -->
+            <div id="previousEmployersContainer">
+                <!-- Additional previous employers will be added here via JavaScript -->
+            </div>
+            
+            <!-- Hidden template for new previous employer rows -->
+            <template id="previousEmployerTemplate">
+                <div class="previous-employer-row mb-4 border-top pt-3 mt-3">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Company Name</label>
+                            <input type="text" name="previous_employer_name_extra[]" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Join Date</label>
+                            <input type="date" name="previous_employer_join_date_extra[]" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Leave Date</label>
+                            <input type="date" name="previous_employer_leave_date_extra[]" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Remarks</label>
+                            <textarea name="previous_employer_remarks_extra[]" rows="2" class="form-control"></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Rating (1-5)</label>
+                            <input type="number" name="previous_employer_rating_extra[]" min="1" max="5" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 text-end">
+                            <button type="button" class="btn btn-sm btn-danger remove-row">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+    
+    <!-- Qualifications Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Qualifications</h5>
+            <button type="button" class="btn btn-sm btn-light" id="addQualification">
+                <i class="fas fa-plus"></i> Add Qualification
+            </button>
+        </div>
+        <div class="card-body">
+            <!-- Default qualification form fields -->
+            <div class="qualification-row mb-3">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="{{ form.qualification.id_for_label }}" class="form-label">Qualification</label>
+                        {{ form.qualification }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.institution.id_for_label }}" class="form-label">Institution</label>
+                        {{ form.institution }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.year_of_passing.id_for_label }}" class="form-label">Year of Passing</label>
+                        {{ form.year_of_passing }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Container for dynamically added qualifications -->
+            <div id="qualificationsContainer">
+                <!-- Additional qualifications will be added here via JavaScript -->
+            </div>
+            
+            <!-- Hidden template for new qualification rows -->
+            <template id="qualificationTemplate">
+                <div class="qualification-row mb-3 border-top pt-3 mt-3">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Qualification</label>
+                            <input type="text" name="qualification_extra[]" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Institution</label>
+                            <input type="text" name="institution_extra[]" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Year of Passing</label>
+                            <input type="number" name="year_of_passing_extra[]" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 text-end">
+                            <button type="button" class="btn btn-sm btn-danger remove-row">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+    
+    <!-- Status Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Status & Verification</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <div class="text-danger">{{ form.status.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.user_type.id_for_label }}" class="form-label">User Type</label>
+                    {{ form.user_type }}
+                    {% if form.user_type.errors %}
+                        <div class="text-danger">{{ form.user_type.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mb-3 form-check">
+                {{ form.is_verified }}
+                <label class="form-check-label" for="{{ form.is_verified.id_for_label }}">
+                    Verified Account
+                </label>
+            </div>
+            
+            <div class="mb-3 form-check">
+                {{ form.is_printed }}
+                <label class="form-check-label" for="{{ form.is_printed.id_for_label }}">
+                    ID Card Printed
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mb-4">
+        <button type="submit" class="btn btn-primary btn-lg">Create User</button>
+        <a href="{% url 'admin_manage_users' %}" class="btn btn-secondary btn-lg">Cancel</a>
+</div>
+</form>
+
+<script>
+    // Auto-fill username based on first name, last name, and GSEZ ID
+    document.addEventListener('DOMContentLoaded', function() {
+        const firstNameField = document.getElementById('{{ form.first_name.id_for_label }}');
+        const lastNameField = document.getElementById('{{ form.last_name.id_for_label }}');
+        const gsezIdField = document.getElementById('{{ form.gsezid.id_for_label }}');
+        const usernameField = document.getElementById('{{ form.username.id_for_label }}');
+        
+        function updateUsername() {
+            const gsezId = gsezIdField.value.trim();
+            
+            // Only use GSEZ ID as username
+            if (gsezId) {
+                usernameField.value = gsezId;
+            } else {
+                usernameField.value = '';
+            }
+        }
+        
+        firstNameField.addEventListener('input', updateUsername);
+        lastNameField.addEventListener('input', updateUsername);
+        gsezIdField.addEventListener('input', updateUsername);
+        
+        // Initial update in case fields are pre-filled
+        updateUsername();
+        
+        // Handle Allow Login Toggle
+        const allowLoginToggle = document.getElementById('allowLoginToggle');
+        const allowLoginValue = document.getElementById('allowLoginValue');
+        const passwordFieldsContainer = document.getElementById('passwordFieldsContainer');
+        const password1Field = document.getElementById('{{ form.password1.id_for_label }}');
+        const password2Field = document.getElementById('{{ form.password2.id_for_label }}');
+        
+        function togglePasswordFields() {
+            if (allowLoginToggle.checked) {
+                // Show password fields
+                passwordFieldsContainer.style.display = 'flex';
+                password1Field.setAttribute('required', 'required');
+                password2Field.setAttribute('required', 'required');
+                allowLoginValue.value = 'true';
+            } else {
+                // Hide password fields
+                passwordFieldsContainer.style.display = 'none';
+                password1Field.removeAttribute('required');
+                password2Field.removeAttribute('required');
+                // Clear password fields
+                password1Field.value = '';
+                password2Field.value = '';
+                allowLoginValue.value = 'false';
+            }
+        }
+        
+        // Set up event listener for the toggle switch
+        allowLoginToggle.addEventListener('change', togglePasswordFields);
+        
+        // Initial toggle state update
+        togglePasswordFields();
+        
+        // Emergency Contacts
+        const addEmergencyContactBtn = document.getElementById('addEmergencyContact');
+        const emergencyContactTemplate = document.getElementById('emergencyContactTemplate');
+        const emergencyContactsContainer = document.getElementById('emergencyContactsContainer');
+        
+        if (addEmergencyContactBtn && emergencyContactTemplate && emergencyContactsContainer) {
+            addEmergencyContactBtn.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent form submission
+                const clone = document.importNode(emergencyContactTemplate.content, true);
+                
+                // Add event listener to the remove button in the cloned content
+                const removeBtn = clone.querySelector('.remove-row');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function(e) {
+                        e.preventDefault(); // Prevent form submission
+                        this.closest('.emergency-contact-row').remove();
+                    });
+                }
+                
+                emergencyContactsContainer.appendChild(clone);
+            });
+        }
+        
+        // Family Members
+        const addFamilyMemberBtn = document.getElementById('addFamilyMember');
+        const familyMemberTemplate = document.getElementById('familyMemberTemplate');
+        const familyMembersContainer = document.getElementById('familyMembersContainer');
+        
+        if (addFamilyMemberBtn && familyMemberTemplate && familyMembersContainer) {
+            addFamilyMemberBtn.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent form submission
+                const clone = document.importNode(familyMemberTemplate.content, true);
+                
+                // Add event listener to the remove button in the cloned content
+                const removeBtn = clone.querySelector('.remove-row');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function(e) {
+                        e.preventDefault(); // Prevent form submission
+                        this.closest('.family-member-row').remove();
+                    });
+                }
+                
+                familyMembersContainer.appendChild(clone);
+            });
+        }
+        
+        // Previous Employers
+        const addPreviousEmployerBtn = document.getElementById('addPreviousEmployer');
+        const previousEmployerTemplate = document.getElementById('previousEmployerTemplate');
+        const previousEmployersContainer = document.getElementById('previousEmployersContainer');
+        
+        if (addPreviousEmployerBtn && previousEmployerTemplate && previousEmployersContainer) {
+            addPreviousEmployerBtn.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent form submission
+                const clone = document.importNode(previousEmployerTemplate.content, true);
+                
+                // Add event listener to the remove button in the cloned content
+                const removeBtn = clone.querySelector('.remove-row');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function(e) {
+                        e.preventDefault(); // Prevent form submission
+                        this.closest('.previous-employer-row').remove();
+                    });
+                }
+                
+                previousEmployersContainer.appendChild(clone);
+            });
+        }
+        
+        // Qualifications
+        const addQualificationBtn = document.getElementById('addQualification');
+        const qualificationTemplate = document.getElementById('qualificationTemplate');
+        const qualificationsContainer = document.getElementById('qualificationsContainer');
+        
+        if (addQualificationBtn && qualificationTemplate && qualificationsContainer) {
+            addQualificationBtn.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent form submission
+                const clone = document.importNode(qualificationTemplate.content, true);
+                
+                // Add event listener to the remove button in the cloned content
+                const removeBtn = clone.querySelector('.remove-row');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function(e) {
+                        e.preventDefault(); // Prevent form submission
+                        this.closest('.qualification-row').remove();
+                    });
+                }
+                
+                qualificationsContainer.appendChild(clone);
+            });
+        }
+        
+        // Form validation before submit
+        const createUserForm = document.getElementById('createUserForm');
+        if (createUserForm) {
+            createUserForm.addEventListener('submit', function(e) {
+                // Additional validation can be added here if needed
+                // For example, checking if required fields are filled
+                
+                // Make sure at least one emergency contact is provided if any fields are filled
+                const emergencyContactName = document.querySelector('[name="{{ form.emergency_contact_name.name }}"]');
+                const emergencyContactNumber = document.querySelector('[name="{{ form.emergency_contact_number.name }}"]');
+                
+                if ((emergencyContactName && emergencyContactName.value) && 
+                    (!emergencyContactNumber || !emergencyContactNumber.value)) {
+                    alert('Please provide both name and number for emergency contact');
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Similar validations can be added for other multi-value fields
+                
+                return true;
+            });
+        }
+    });
+</script>
+
+{% endblock %} 

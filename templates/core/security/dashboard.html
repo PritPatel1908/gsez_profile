@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Security Dashboard - GSEZ Profile{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Security Dashboard</h2>
+        <p class="text-muted">Welcome, {{ request.user.get_full_name }}. Manage security operations here.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <i class="fas fa-qrcode fa-4x mb-3 text-primary"></i>
+                                <h5 class="card-title">Scan QR Code</h5>
+                                <p class="card-text">Scan a user's QR code to verify their identity and access profile details.</p>
+                                <a href="{% url 'security_scan_qr' %}" class="btn btn-primary">
+                                    <i class="fas fa-qrcode mr-2"></i> Scan QR
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <i class="fas fa-user-plus fa-4x mb-3 text-success"></i>
+                                <h5 class="card-title">Register New User</h5>
+                                <p class="card-text">Register a new user in the system with basic profile information.</p>
+                                <a href="{% url 'security_add_user' %}" class="btn btn-success">
+                                    <i class="fas fa-user-plus mr-2"></i> Add User
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <i class="fas fa-user-circle fa-4x mb-3 text-info"></i>
+                                <h5 class="card-title">My Profile</h5>
+                                <p class="card-text">Update your personal profile information and preferences.</p>
+                                <a href="{% url 'security_profile' %}" class="btn btn-info">
+                                    <i class="fas fa-user-circle mr-2"></i> View Profile
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Security Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Emergency Contacts</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        GSEZ Admin Office
+                                        <span>+91 9876543210</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Fire Department
+                                        <span>101</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Police
+                                        <span>100</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Ambulance
+                                        <span>108</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">Security Guidelines</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item">Always verify the QR code and photo ID match</li>
+                                    <li class="list-group-item">Check for expired GSEZ cards</li>
+                                    <li class="list-group-item">Verify user employment status if in doubt</li>
+                                    <li class="list-group-item">Report suspicious activities immediately</li>
+                                    <li class="list-group-item">Maintain visitor logs accurately</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

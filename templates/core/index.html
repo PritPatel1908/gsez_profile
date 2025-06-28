@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}GSEZ Profile Management System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-10 text-center">
+            <h1 class="display-4 mb-4">Welcome to GSEZ Profile Management System</h1>
+            <p class="lead">
+                A comprehensive platform for managing employee profiles, documents, and information
+                within the Gujarat Special Economic Zone.
+            </p>
+            
+            {% if user.is_authenticated %}
+                <div class="mt-5">
+                    <div class="alert alert-success">
+                        <h4 class="alert-heading">Welcome back, {{ user.get_full_name|default:user.username }}!</h4>
+                        <p>You are currently logged in as a {{ user.get_user_type_display }}.</p>
+                        <hr>
+                        <div class="mt-3">
+                            {% if user.user_type == 'admin' %}
+                                <a href="{% url 'admin_dashboard' %}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Go to Admin Dashboard
+                                </a>
+                            {% elif user.user_type == 'hr' %}
+                                <a href="{% url 'hr_dashboard' %}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Go to HR Dashboard
+                                </a>
+                            {% elif user.user_type == 'security' %}
+                                <a href="{% url 'security_dashboard' %}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Go to Security Dashboard
+                                </a>
+                            {% else %}
+                                <a href="{% url 'user_dashboard' %}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Go to Your Dashboard
+                                </a>
+                            {% endif %}
+                            
+                            <a href="{% url 'logout' %}" class="btn btn-outline-secondary btn-lg ms-2">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="mt-5">
+                    <!-- <a href="{% url 'login' %}" class="btn btn-primary btn-lg me-2">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a> -->
+                    <a href="{% url 'login_new' %}" class="btn btn-success btn-lg me-2">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                    <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Register
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-tie fa-4x text-primary mb-3"></i>
+                    <h3 class="card-title">User Management</h3>
+                    <p class="card-text">
+                        Comprehensive user profile management with personal information, employment history, 
+                        qualifications, and more.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-id-card fa-4x text-primary mb-3"></i>
+                    <h3 class="card-title">Profile Cards</h3>
+                    <p class="card-text">
+                        Generate digital profile cards with QR codes for easy identification and 
+                        access control within the GSEZ facilities.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-alt fa-4x text-primary mb-3"></i>
+                    <h3 class="card-title">Document Management</h3>
+                    <p class="card-text">
+                        Store and manage important documents securely, including identification documents,
+                        certificates, and other employee records.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt fa-4x text-primary mb-3"></i>
+                    <h3 class="card-title">Security Module</h3>
+                    <p class="card-text">
+                        Advanced security features including QR code scanning for entry/exit tracking,
+                        verification processes, and secure access control.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-building fa-4x text-primary mb-3"></i>
+                    <h3 class="card-title">Company Management</h3>
+                    <p class="card-text">
+                        Manage multiple companies within GSEZ, track employee associations,
+                        and maintain company-specific information.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

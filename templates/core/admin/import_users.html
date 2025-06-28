@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Import Users - GSEZ Profile{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2>Import Users</h2>
+        <p class="text-muted">Upload a CSV file to import multiple users at once with all details.</p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Upload CSV File</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" action="{% url 'admin_import_users' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <h6 class="mb-3">CSV Format Instructions:</h6>
+                        <ul class="text-muted">
+                            <li>File must be in CSV format (.csv extension)</li>
+                            <li>First row must contain the header with field names (exact spelling as shown below)</li>
+                            <li>Second row contains field instructions - both first and second rows will be skipped during import</li>
+                            <li><strong>All fields are optional</strong> - missing fields will be auto-generated or left blank</li>
+                            <li><strong>Field values:</strong>
+                                <ul>
+                                    <li>Boolean fields (is_verified, is_printed, etc.): Use '1' for true, '0' for false</li>
+                                    <li>Date fields: The following formats are supported:
+                                        <ul>
+                                            <li>YYYY-MM-DD (recommended, e.g., 1990-01-31)</li>
+                                            <li>DD/MM/YYYY (e.g., 31/01/1990)</li>
+                                            <li>DD-MM-YYYY (e.g., 31-01-1990)</li>
+                                            <li>MM/DD/YYYY (e.g., 01/31/1990)</li>
+                                            <li>DD.MM.YYYY (e.g., 31.01.1990)</li>
+                                        </ul>
+                                    </li>
+                                    <li>user_type: 'user', 'admin', 'hr', or 'security'</li>
+                                    <li>status: 'active', 'inactive', 'blocked', 'terminated', or 'under_surveillance'</li>
+                                </ul>
+                            </li>
+                            <li><strong>Multi-value fields are now separated:</strong>
+                                <ul>
+                                    <li>Emergency contacts: Use 'emergency_contact_name' and 'emergency_contact_number' fields</li>
+                                    <li>Family members: Use 'family_member_name', 'family_member_relation', and 'family_member_number' fields</li>
+                                    <li>Previous employers: Use 'previous_employer_name', 'previous_employer_join_date', 'previous_employer_leave_date', 'previous_employer_remarks', and 'previous_employer_rating' fields</li>
+                                    <li>Qualifications: Use 'qualification_name', 'qualification_institution', and 'qualification_year' fields</li>
+                                </ul>
+                            </li>
+                            <li>For multiple entries of the same type (e.g., multiple family members), please import one entry at a time and then add more through the user edit interface.</li>
+                            <li>The system also supports the old JSON format for backward compatibility.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> The template file has explanations and examples. It's recommended to download it first and fill in your data following the format.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label">Select CSV File</label>
+                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <a href="{% url 'admin_manage_users' %}" class="btn btn-secondary w-100">
+                                <i class="fas fa-arrow-left"></i> Back to Users
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-upload"></i> Import Users
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-4">
+                        <h6>Available Fields:</h6>
+                        <div class="border p-3 bg-light">
+                            <p class="mb-1"><strong>Account Information:</strong> username, password, first_name, middle_name, last_name, email, user_type, status, is_verified, is_required_profile_detail, is_printed</p>
+                            <p class="mb-1"><strong>Personal Information:</strong> nationality, date_of_birth, gsez_card_issue_date, gsez_card_expiry_date, gsezid, profile_photo</p>
+                            <p class="mb-1"><strong>Address Information:</strong> current_address, is_permanent, permanent_address</p>
+                            <p class="mb-1"><strong>Current Employment:</strong> current_employer, current_employer_join_date, current_employer_emp_code, current_employer_designation, current_employer_department, current_employer_company, current_employer_remarks, current_employer_rating</p>
+                            <p class="mb-1"><strong>Multi-value Fields:</strong> emergency_contact_name, emergency_contact_number, family_member_name, family_member_relation, family_member_number, previous_employer_name, previous_employer_join_date, previous_employer_leave_date, previous_employer_remarks, previous_employer_rating, qualification_name, qualification_institution, qualification_year</p>
+                        </div>
+                        <div class="mt-2">
+                            <a href="{% url 'admin_export_users_template' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-download"></i> Download Sample Template
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if messages %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% for message in messages %}
+            showToast('{{ message.tags }}', '{{ message }}');
+        {% endfor %}
+    });
+</script>
+{% endif %}
+{% endblock %} 

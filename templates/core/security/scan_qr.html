@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Scan QR Code - GSEZ Profile{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Scan QR Code</h2>
+        <p class="text-muted">Scan a user's QR code to view their profile information.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Scan QR Code</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <p>Please position the QR code in front of your camera or enter the user ID manually below.</p>
+                    
+                    <div id="scanner-container" class="mb-4">
+                        <div id="reader" style="width: 100%; height: 300px;"></div>
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <button id="start-scan" class="btn btn-primary">
+                            <i class="fas fa-qrcode"></i> Start Scanner
+                        </button>
+                        <button id="stop-scan" class="btn btn-secondary d-none">
+                            <i class="fas fa-stop"></i> Stop Scanner
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <p class="text-muted">- OR -</p>
+                    <form method="post" class="mb-3">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="text" name="user_id" class="form-control" placeholder="Enter User ID" required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Find User
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const html5QrCode = new Html5Qrcode("reader");
+        const startScanBtn = document.getElementById('start-scan');
+        const stopScanBtn = document.getElementById('stop-scan');
+        
+        let scanning = false;
+        
+        startScanBtn.addEventListener('click', function() {
+            if (!scanning) {
+                startScanBtn.classList.add('d-none');
+                stopScanBtn.classList.remove('d-none');
+                
+                const config = { fps: 10, qrbox: 250 };
+                
+                html5QrCode.start(
+                    { facingMode: "environment" }, 
+                    config, 
+                    (decodedText) => {
+                        // On successful scan
+                        html5QrCode.stop();
+                        startScanBtn.classList.remove('d-none');
+                        stopScanBtn.classList.add('d-none');
+                        scanning = false;
+                        
+                        // Handle QR code data
+                        if (decodedText.includes('IDCARD/')) {
+                            // New format: Extract GSEZ ID from URL (http://207.180.234.113/IDCARD/gsezid)
+                            const gsezid = decodedText.split('IDCARD/')[1];
+                            
+                            // Create a form and submit
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.style.display = 'none';
+                            
+                            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                            const csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = 'csrfmiddlewaretoken';
+                            csrfInput.value = csrfToken;
+                            
+                            const gsezIdInput = document.createElement('input');
+                            gsezIdInput.type = 'hidden';
+                            gsezIdInput.name = 'gsezid';
+                            gsezIdInput.value = gsezid;
+                            
+                            form.appendChild(csrfInput);
+                            form.appendChild(gsezIdInput);
+                            document.body.appendChild(form);
+                            form.submit();
+                        } else if (decodedText.includes('user_id:')) {
+                            // Legacy format: Extract user ID
+                            const userId = decodedText.split('user_id:')[1];
+                            if (userId) {
+                                // Create a form and submit
+                                const form = document.createElement('form');
+                                form.method = 'POST';
+                                form.style.display = 'none';
+                                
+                                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                                const csrfInput = document.createElement('input');
+                                csrfInput.type = 'hidden';
+                                csrfInput.name = 'csrfmiddlewaretoken';
+                                csrfInput.value = csrfToken;
+                                
+                                const userIdInput = document.createElement('input');
+                                userIdInput.type = 'hidden';
+                                userIdInput.name = 'user_id';
+                                userIdInput.value = userId;
+                                
+                                form.appendChild(csrfInput);
+                                form.appendChild(userIdInput);
+                                document.body.appendChild(form);
+                                form.submit();
+                            } else {
+                                alert('Invalid QR code. Please try again.');
+                            }
+                        } else {
+                            alert('Invalid QR code format. Please try again.');
+                        }
+                    },
+                    (errorMessage) => {
+                        // Ignore errors
+                    }
+                ).catch((err) => {
+                    alert('Error starting camera: ' + err);
+                    startScanBtn.classList.remove('d-none');
+                    stopScanBtn.classList.add('d-none');
+                    scanning = false;
+                });
+                
+                scanning = true;
+            }
+        });
+        
+        stopScanBtn.addEventListener('click', function() {
+            if (scanning) {
+                html5QrCode.stop().then(() => {
+                    startScanBtn.classList.remove('d-none');
+                    stopScanBtn.classList.add('d-none');
+                    scanning = false;
+                }).catch((err) => {
+                    alert('Error stopping camera: ' + err);
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %} 

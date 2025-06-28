@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Profile - GSEZ Profile{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Your Profile</h2>
+            <p class="text-muted">View and manage your personal information</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'user_dashboard' %}" class="btn btn-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <a href="{% url 'user_profile_edit' %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit Profile
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Profile Photo and Basic Info Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Basic Information</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if user.profile_photo %}
+                        <img src="{{ user.profile_photo.url }}" alt="Profile Photo" class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
+                    {% else %}
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px;">
+                            <i class="fas fa-user fa-4x text-secondary"></i>
+                        </div>
+                    {% endif %}
+
+                    <h4>{{ user.get_full_name }}</h4>
+                    <p class="text-muted">{{ user.email }}</p>
+
+                    <div class="text-start mt-4">
+                        <div class="row mb-2">
+                            <div class="col-6 fw-bold">GSEZ ID:</div>
+                            <div class="col-6">{{ user.gsezid|default:"Not assigned" }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-6 fw-bold">Nationality:</div>
+                            <div class="col-6">{{ user.nationality|default:"Not specified" }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-6 fw-bold">Date of Birth:</div>
+                            <div class="col-6">{{ user.date_of_birth|date:"M d, Y"|default:"Not specified" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Address Information Card -->
+        <div class="col-md-8 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Address Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h6 class="fw-bold">Current Address</h6>
+                            <p class="border-bottom pb-3">{{ user.current_address|default:"Not provided"|linebreaks }}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6 class="fw-bold">Permanent Address</h6>
+                            <p>{{ user.permanent_address|default:"Not provided"|linebreaks }}</p>
+                            {% if user.is_permanent %}
+                                <p><small class="text-muted"><i class="fas fa-info-circle"></i> Same as current address</small></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employment Information Row -->
+    <div class="row">
+        <!-- Current Employment Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Current Employment</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Employer:</div>
+                        <div class="col-6">{{ user.current_employer|default:"Not specified" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Company:</div>
+                        <div class="col-6">{% if user.current_employer_company %}{{ user.current_employer_company.company_name }}{% else %}Not specified{% endif %}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Designation:</div>
+                        <div class="col-6">{{ user.current_employer_designation|default:"Not specified" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Department:</div>
+                        <div class="col-6">{{ user.current_employer_department|default:"Not specified" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Employee Code:</div>
+                        <div class="col-6">{{ user.current_employer_emp_code|default:"Not specified" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Join Date:</div>
+                        <div class="col-6">{{ user.current_employer_join_date|date:"M d, Y"|default:"Not specified" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GSEZ Card Information -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">GSEZ Card Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">GSEZ ID:</div>
+                        <div class="col-6">{{ user.gsezid|default:"Not assigned" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Card Issue Date:</div>
+                        <div class="col-6">{{ user.gsez_card_issue_date|date:"M d, Y"|default:"Not specified" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Card Expiry Date:</div>
+                        <div class="col-6">{{ user.gsez_card_expiry_date|date:"M d, Y"|default:"Not specified" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Verification Status:</div>
+                        <div class="col-6">
+                            {% if user.is_verified %}
+                                <span class="badge bg-success">Verified</span>
+                            {% else %}
+                                <span class="badge bg-danger">Not Verified</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Contacts & Family Members Row -->
+    <div class="row">
+        <!-- Emergency Contacts Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Emergency Contacts</h5>
+                </div>
+                <div class="card-body">
+                    {% with emergency_contacts=user.get_emergency_contacts %}
+                    {% if emergency_contacts %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Contact Number</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contact in emergency_contacts %}
+                                        <tr>
+                                            <td>{{ contact.name }}</td>
+                                            <td>{{ contact.number }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No emergency contacts added yet.</p>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Family Members Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Family Members</h5>
+                </div>
+                <div class="card-body">
+                    {% with family_members=user.get_family_members %}
+                    {% if family_members %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Relation</th>
+                                        <th>Contact</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for member in family_members %}
+                                        <tr>
+                                            <td>{{ member.name }}</td>
+                                            <td>{{ member.relation }}</td>
+                                            <td>{{ member.number|default:"-" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No family members added yet.</p>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Previous Employment & Qualifications Row -->
+    <div class="row">
+        <!-- Previous Employment Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Previous Employment</h5>
+                </div>
+                <div class="card-body">
+                    {% with previous_employers=user.get_previous_employers %}
+                    {% if previous_employers %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Company</th>
+                                        <th>Period</th>
+                                        <th>Rating</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for employer in previous_employers %}
+                                        <tr>
+                                            <td>{{ employer.company }}</td>
+                                            <td>
+                                                {% if employer.join_date or employer.leave_date %}
+                                                    {{ employer.join_date|default:"" }} - {{ employer.leave_date|default:"Present" }}
+                                                {% else %}
+                                                    Not specified
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if employer.rating %}
+                                                    <div class="text-warning">
+                                                        {{ employer.rating }}/5
+                                                    </div>
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No previous employment history added yet.</p>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Qualifications Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Qualifications</h5>
+                </div>
+                <div class="card-body">
+                    {% with qualifications=user.get_qualifications %}
+                    {% if qualifications %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Qualification</th>
+                                        <th>Institution</th>
+                                        <th>Year</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for qualification in qualifications %}
+                                        <tr>
+                                            <td>{{ qualification.qualification }}</td>
+                                            <td>{{ qualification.institution }}</td>
+                                            <td>{{ qualification.year|default:"-" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No qualifications added yet.</p>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documents Card -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Documents</h5>
+                </div>
+                <div class="card-body">
+                    {% if documents %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Document ID</th>
+                                        <th>Document Type</th>
+                                        <th>Preview</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for doc in documents %}
+                                        <tr>
+                                            <td>{{ doc.govt_id_number }}</td>
+                                            <td>Government ID</td>
+                                            <td>
+                                                {% if doc.govt_id_photo %}
+                                                    <a href="{{ doc.govt_id_photo.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-muted">No preview</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No documents uploaded yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

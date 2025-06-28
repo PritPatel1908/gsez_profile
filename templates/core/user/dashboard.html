@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Dashboard - GSEZ Profile{% endblock %}
+
+{% block content %}
+<div class="welcome-banner alert alert-info alert-dismissible fade show" role="alert">
+    <div class="row align-items-center">
+        <div class="col-md-2">
+            <div class="gsez-logo">
+                <img src="{% static 'img/GSEZ.png' %}" alt="GSEZ Logo" class="img-fluid">
+            </div>
+        </div>
+        <div class="col-md-10">
+            <h2 class="mb-2">Welcome, {{ user.first_name|default:user.username }}!</h2>
+            <p class="lead mb-0">Your GSEZ Profile Dashboard</p>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<div class="row mt-4">
+    <!-- Profile Overview with QR Code -->
+    <div class="col-md-4">
+        <div class="card profile-overview mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Profile Overview</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if user.profile_photo %}
+                    <img src="{{ user.profile_photo.url }}" alt="Profile Photo" class="profile-img mb-3">
+                {% else %}
+                    <div class="profile-img-placeholder mb-3">
+                        <i class="fas fa-user fa-4x"></i>
+                    </div>
+                {% endif %}
+                
+                <h4>{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted">{{ user.email }}</p>
+                
+                <div class="user-details text-start mt-4">
+                    <div class="row mb-2">
+                        <div class="col-5 fw-bold">GSEZ ID:</div>
+                        <div class="col-7">{{ user.gsezid|default:"Not assigned" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5 fw-bold">Employer:</div>
+                        <div class="col-7">{{ user.current_employer|default:"Not specified" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5 fw-bold">Designation:</div>
+                        <div class="col-7">{{ user.current_employer_designation|default:"Not specified" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5 fw-bold">Department:</div>
+                        <div class="col-7">{{ user.current_employer_department|default:"Not specified" }}</div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{% url 'user_profile_edit' %}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                    {% if user.gsezid %}
+                    <a href="http://207.180.234.113/IDCARD/{{ user.gsezid }}" target="_blank" class="btn btn-success">
+                        <i class="fas fa-id-card me-2"></i>View ID Card
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- QR Code section removed as per requirements -->
+    </div>
+    
+    <div class="col-md-4">
+        <!-- User information cards and other dashboard content can be added here -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Quick Links</h5>
+            </div>
+            <div class="card-body">
+                <!-- Profile overview content -->
+                <div class="list-group">
+                    <a href="{% url 'user_profile' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-user-circle me-2"></i> View Profile Card</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{% url 'user_profile_edit' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-edit me-2"></i> Edit Complete Profile</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{% url 'user_profile_card' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-id-card me-2"></i> ID Card</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% if user.gsezid %}
+                    <a href="http://207.180.234.113/IDCARD/{{ user.gsezid }}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-id-badge me-2"></i> View ID Card (External)</span>
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'user_documents' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-file-alt me-2"></i> My Documents</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{% url 'user_job_opportunities' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-briefcase me-2"></i> Job Opportunities</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{% url 'change_password' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-lock me-2"></i> Change Password</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Emergency contacts section -->
+        <div class="card mb-4 emergency-contact">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">GSEZ Emergency Contacts</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                        <span><i class="fas fa-fire-extinguisher me-2"></i> Fire Emergency</span>
+                        <span class="badge bg-danger rounded-pill">{{ emergency_contacts.fire }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                        <span><i class="fas fa-shield-alt me-2"></i> Police</span>
+                        <span class="badge bg-danger rounded-pill">{{ emergency_contacts.police }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                        <span><i class="fas fa-ambulance me-2"></i> Ambulance</span>
+                        <span class="badge bg-danger rounded-pill">{{ emergency_contacts.ambulance }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                        <span><i class="fas fa-user-shield me-2"></i> Admin Contact</span>
+                        <span class="badge bg-danger rounded-pill">{{ emergency_contacts.admin }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                        <span><i class="fas fa-user-lock me-2"></i> Security</span>
+                        <span class="badge bg-danger rounded-pill">{{ emergency_contacts.security }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .welcome-banner {
+        background-color: #e8f4ff;
+        border-left: 5px solid #007bff;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        position: relative;
+    }
+    
+    .welcome-banner h2 {
+        color: #007bff;
+        margin-bottom: 5px;
+    }
+    
+    .gsez-logo {
+        padding: 10px;
+        text-align: center;
+    }
+    
+    .btn-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    
+    .emergency-contact .list-group-item {
+        border: none;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(0,0,0,.125);
+    }
+    
+    .emergency-contact .list-group-item:last-child {
+        border-bottom: none;
+    }
+    
+    /* Profile Overview Styles */
+    .profile-overview .profile-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #007bff;
+    }
+    
+    .profile-overview .profile-img-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #f1f1f1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        color: #007bff;
+        border: 3px solid #007bff;
+    }
+    
+    .profile-overview .user-details {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+    }
+    
+    /* QR Code Styles */
+    .qr-code-img {
+        max-width: 200px;
+        margin: 0 auto;
+        display: block;
+    }
+</style>
+{% endblock %}

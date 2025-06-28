@@ -1,0 +1,477 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - GSEZ Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stats-card {
+        transition: all 0.3s ease;
+        border-radius: 15px;
+        overflow: hidden;
+        height: 100%;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-border-left {
+        border-left: 5px solid;
+        border-radius: 15px;
+    }
+    
+    .border-left-primary { border-left-color: #4e73df; }
+    .border-left-success { border-left-color: #1cc88a; }
+    .border-left-info { border-left-color: #36b9cc; }
+    .border-left-warning { border-left-color: #f6c23e; }
+    .border-left-danger { border-left-color: #e74a3b; }
+    
+    .stats-icon {
+        font-size: 2.5rem;
+        opacity: 0.3;
+    }
+    
+    .quick-action-btn {
+        border-radius: 10px;
+        padding: 12px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+    
+    .quick-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .quick-action-btn i {
+        margin-right: 10px;
+        font-size: 1.2em;
+    }
+    
+    .card-header {
+        display: flex;
+        align-items: center;
+    }
+    
+    .card-header i {
+        margin-right: 10px;
+        font-size: 1.2em;
+    }
+    
+    .system-status-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        background-color: #f8f9fc;
+        transition: all 0.3s ease;
+    }
+    
+    .system-status-item:hover {
+        background-color: #eaecf4;
+    }
+    
+    .system-status-item i {
+        margin-right: 10px;
+        font-size: 1.2em;
+    }
+    
+    .badge-custom {
+        padding: 8px 12px;
+        border-radius: 30px;
+        font-weight: 600;
+    }
+    
+    .access-card {
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .access-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .access-card i {
+        transition: all 0.3s ease;
+    }
+    
+    .access-card:hover i {
+        transform: scale(1.1);
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    }
+    
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+    }
+    
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+    }
+    
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
+    }
+    
+    .bg-gradient-danger {
+        background: linear-gradient(135deg, #e74a3b 0%, #b52b1d 100%);
+    }
+    
+    /* Dashboard animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translate3d(0, 30px, 0);
+        }
+        to {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+    }
+    
+    .fadeInUp {
+        animation-name: fadeInUp;
+        animation-duration: 0.5s;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #4e73df;
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #3a56a5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-0 fw-bold"><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h1>
+                <p class="mb-0 mt-2 opacity-75">
+                    <i class="fas fa-user-circle me-1"></i> Welcome, <span class="fw-bold">{{ request.user.get_full_name }}</span>
+                    <span class="mx-2">|</span>
+                    <i class="fas fa-calendar-alt me-1"></i> {% now "l, F j, Y" %}
+                </p>
+            </div>
+            <!-- <div class="d-flex">
+                <button class="btn btn-light btn-sm me-2" data-toggle="tooltip" title="View System Logs">
+                    <i class="fas fa-list fa-sm"></i> View Logs
+                </button>
+                <button class="btn btn-light btn-sm" data-toggle="tooltip" title="Generate System Report">
+                    <i class="fas fa-download fa-sm"></i> Generate Report
+                </button>
+            </div> -->
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-body py-3">
+                <div class="row">
+                    <!-- User Stats -->
+                    <div class="col text-center border-end">
+                        <div class="text-primary">
+                            <i class="fas fa-users fa-2x mb-2"></i>
+                            <h6 class="text-uppercase fw-bold mb-1">TOTAL USERS</h6>
+                            <h4 class="fw-bold">{{ users_count }}</h4>
+                        </div>
+                    </div>
+                    
+                    <!-- Company Stats -->
+                    <div class="col text-center border-end">
+                        <div class="text-success">
+                            <i class="fas fa-building fa-2x mb-2"></i>
+                            <h6 class="text-uppercase fw-bold mb-1">TOTAL COMPANIES</h6>
+                            <h4 class="fw-bold">{{ companies_count }}</h4>
+                        </div>
+                    </div>
+                    
+                    <!-- Printed ID Cards Stats -->
+                    <div class="col text-center">
+                        <div class="text-danger">
+                            <i class="fas fa-id-card fa-2x mb-2"></i>
+                            <h6 class="text-uppercase fw-bold mb-1">PRINTED ID CARDS</h6>
+                            <h4 class="fw-bold">{{ printed_users_count }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quick Actions -->
+    <div class="col-lg-12 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-gradient-primary text-white">
+                <i class="fas fa-bolt"></i>
+                <h6 class="m-0 font-weight-bold d-inline">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'admin_manage_users' %}" class="btn btn-primary btn-block quick-action-btn">
+                            <i class="fas fa-users"></i> Manage Users
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'admin_create_user' %}" class="btn btn-success btn-block quick-action-btn">
+                            <i class="fas fa-user-plus"></i> Add New User
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'admin_manage_companies' %}" class="btn btn-info btn-block quick-action-btn">
+                            <i class="fas fa-building"></i> Manage Companies
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'admin_export_users' %}" class="btn btn-secondary btn-block quick-action-btn">
+                            <i class="fas fa-file-export"></i> Export Data
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <!-- <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-gradient-primary text-white">
+                <i class="fas fa-server"></i>
+                <h6 class="m-0 font-weight-bold d-inline">System Status</h6>
+            </div>
+            <div class="card-body">
+                <div class="system-status-item">
+                    <div>
+                        <i class="fas fa-database text-primary"></i>
+                        <span class="font-weight-bold">Database</span>
+                    </div>
+                    <span class="badge bg-success badge-custom">Active</span>
+                </div>
+                <div class="system-status-item">
+                    <div>
+                        <i class="fas fa-user-lock text-primary"></i>
+                        <span class="font-weight-bold">User Authentication</span>
+                    </div>
+                    <span class="badge bg-success badge-custom">Active</span>
+                </div>
+                <div class="system-status-item">
+                    <div>
+                        <i class="fas fa-qrcode text-primary"></i>
+                        <span class="font-weight-bold">QR Code Generation</span>
+                    </div>
+                    <span class="badge bg-success badge-custom">Active</span>
+                </div>
+                <div class="system-status-item">
+                    <div>
+                        <i class="fas fa-file-export text-primary"></i>
+                        <span class="font-weight-bold">Data Export</span>
+                    </div>
+                    <span class="badge bg-success badge-custom">Active</span>
+                </div>
+            </div>
+        </div>
+    </div> -->
+</div>
+
+<!-- Quick Access Cards -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 bg-gradient-primary text-white">
+                <i class="fas fa-rocket"></i>
+                <h6 class="m-0 font-weight-bold d-inline">Quick Access</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-4 mx-auto">
+                        <div class="card border-0 shadow access-card h-100">
+                            <div class="card-body text-center">
+                                <div class="rounded-circle bg-light p-4 d-inline-flex mb-3">
+                                    <i class="fas fa-file-export fa-3x text-success"></i>
+                                </div>
+                                <h5 class="card-title font-weight-bold">Export Companies</h5>
+                                <p class="card-text">Export all company data to CSV format for reporting.</p>
+                                <a href="{% url 'admin_export_companies' %}" class="btn btn-success btn-sm mt-2">
+                                    <i class="fas fa-download"></i> Export Companies
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Statistics -->
+<!-- <div class="row">
+    <div class="col-xl-8 col-lg-7 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 bg-gradient-primary text-white">
+                <i class="fas fa-chart-line"></i>
+                <h6 class="m-0 font-weight-bold d-inline">User Activity</h6>
+            </div>
+            <div class="card-body">
+                <div style="height: 300px; background-color: #f8f9fc; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                    <div class="text-center">
+                        <i class="fas fa-chart-line fa-3x text-gray-300 mb-3"></i>
+                        <p class="mb-0 text-gray-500">User activity statistics will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-lg-5 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 bg-gradient-primary text-white">
+                <i class="fas fa-bell"></i>
+                <h6 class="m-0 font-weight-bold d-inline">Recent Notifications</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">New user registered</h6>
+                            <small>3 days ago</small>
+                        </div>
+                        <p class="mb-1">A new user has registered to the system.</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Data export completed</h6>
+                            <small>5 days ago</small>
+                        </div>
+                        <p class="mb-1">The system has completed exporting user data.</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">System update</h6>
+                            <small>1 week ago</small>
+                        </div>
+                        <p class="mb-1">The system has been updated to the latest version.</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> -->
+
+<!-- Dashboard Footer -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm bg-light border-0 mb-4">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i> System Status: <span class="text-success fw-bold">Healthy</span>
+                            <span class="mx-2">|</span>
+                            <i class="fas fa-server me-1"></i> Last Backup: <span class="fw-bold">{% now "F j, Y" %}</span>
+                        </small>
+                    </div>
+                    <div>
+                        <small class="text-muted">
+                            <i class="fas fa-question-circle me-1"></i>
+                            <a href="#" class="text-decoration-none">Help</a>
+                            <span class="mx-2">|</span>
+                            <i class="fas fa-cog me-1"></i>
+                            <a href="#" class="text-decoration-none">Settings</a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Dashboard-specific JavaScript
+    $(document).ready(function() {
+        // Add animations with delay for each card
+        $('.stats-card').each(function(index) {
+            setTimeout(() => {
+                $(this).addClass('fadeInUp');
+            }, 100 * index);
+        });
+        
+        // Animate system status items
+        $('.system-status-item').each(function(index) {
+            setTimeout(() => {
+                $(this).addClass('fadeInUp');
+            }, 300 + (100 * index));
+        });
+        
+        // Animate quick access cards
+        $('.access-card').each(function(index) {
+            setTimeout(() => {
+                $(this).addClass('fadeInUp');
+            }, 700 + (150 * index));
+        });
+        
+        // Tooltip initialization
+        $('[data-toggle="tooltip"]').tooltip();
+        
+        // Add hover effects for buttons
+        $('.quick-action-btn').hover(
+            function() {
+                $(this).addClass('shadow-lg');
+            }, 
+            function() {
+                $(this).removeClass('shadow-lg');
+            }
+        );
+        
+        // Initialize any charts or data displays
+        initializeUserActivity();
+    });
+    
+    // Function to initialize user activity chart (placeholder)
+    function initializeUserActivity() {
+        // This would be replaced with actual chart initialization
+        console.log("User activity chart would be initialized here");
+    }
+</script>
+{% endblock %} 

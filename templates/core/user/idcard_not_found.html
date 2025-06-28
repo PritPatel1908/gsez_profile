@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ID Card Not Found - GSEZ Profile{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">ID Card Not Found</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+                    </div>
+                    <h5>The GSEZ ID "{{ gsezid }}" could not be found</h5>
+                    <p class="text-muted mb-4">The ID card you are looking for does not exist in our system or may have been deactivated.</p>
+                    
+                    <div class="alert alert-info">
+                        <p>If you believe this is an error, please contact the GSEZ administration office.</p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'home' %}" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>Return to Home Page
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,653 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Security Staff - GSEZ Profile{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Edit Security Staff</h2>
+        <p class="text-muted">Update security personnel information</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'admin_manage_security' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Security Staff
+        </a>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="securityProfileForm">
+    {% csrf_token %}
+    
+    <!-- Basic Information Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Basic Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.gsezid.id_for_label }}" class="form-label">GSEZ ID</label>
+                    {{ form.gsezid }}
+                    {% if form.gsezid.errors %}
+                        <div class="text-danger">{{ form.gsezid.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="text-danger">{{ form.email.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <div class="text-danger">{{ form.status.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <div class="text-danger">{{ form.first_name.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.middle_name.id_for_label }}" class="form-label">Middle Name</label>
+                    {{ form.middle_name }}
+                    {% if form.middle_name.errors %}
+                        <div class="text-danger">{{ form.middle_name.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <div class="text-danger">{{ form.last_name.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="allowLoginToggle" {% if user_obj.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="allowLoginToggle">Allow Login</label>
+                        <input type="hidden" name="allow_login" id="allowLoginValue" value="{% if user_obj.is_active %}true{% else %}false{% endif %}">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="password1" class="form-label">New Password</label>
+                    <input type="password" name="password1" id="password1" class="form-control">
+                    <small class="form-text text-muted">Leave blank to keep current password</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="password2" class="form-label">Confirm New Password</label>
+                    <input type="password" name="password2" id="password2" class="form-control">
+                    <small class="form-text text-muted">Leave blank to keep current password</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Profile Photo Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="fas fa-camera me-2"></i>Identification Photo</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="{{ form.profile_photo.id_for_label }}" class="form-label">Profile Photo</label>
+                    {% if user_obj.profile_photo %}
+                        <div class="mb-3">
+                            <img src="{{ user_obj.profile_photo.url }}" alt="Profile Photo" class="img-thumbnail" style="max-height: 200px;">
+                        </div>
+                    {% endif %}
+                    {{ form.profile_photo }}
+                    {% if form.profile_photo.errors %}
+                        <div class="text-danger">{{ form.profile_photo.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Security staff photos are used for verification purposes at entry points.
+                    </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-secondary" id="openCameraBtn">
+                            <i class="fas fa-camera me-2"></i>Capture Photo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Personal Information Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="fas fa-id-card me-2"></i>Personal Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.nationality.id_for_label }}" class="form-label">Nationality</label>
+                    {{ form.nationality }}
+                    {% if form.nationality.errors %}
+                        <div class="text-danger">{{ form.nationality.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of Birth</label>
+                    {{ form.date_of_birth }}
+                    {% if form.date_of_birth.errors %}
+                        <div class="text-danger">{{ form.date_of_birth.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.gsez_card_issue_date.id_for_label }}" class="form-label">Security Card Issue Date</label>
+                    {{ form.gsez_card_issue_date }}
+                    {% if form.gsez_card_issue_date.errors %}
+                        <div class="text-danger">{{ form.gsez_card_issue_date.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.gsez_card_expiry_date.id_for_label }}" class="form-label">Security Card Expiry Date</label>
+                    {{ form.gsez_card_expiry_date }}
+                    {% if form.gsez_card_expiry_date.errors %}
+                        <div class="text-danger">{{ form.gsez_card_expiry_date.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Contact Information Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="fas fa-address-book me-2"></i>Contact Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="{{ form.current_address.id_for_label }}" class="form-label">Current Address</label>
+                    {{ form.current_address }}
+                    {% if form.current_address.errors %}
+                        <div class="text-danger">{{ form.current_address.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Security Permissions Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="fas fa-key me-2"></i>Security Permissions</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> Security staff will be assigned permissions to scan QR codes and verify users at entry points.
+            </div>
+        </div>
+    </div>
+    
+    <!-- Submit button -->
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Save Changes
+        </button>
+        <a href="{% url 'admin_manage_security' %}" class="btn btn-secondary">
+            <i class="fas fa-times me-2"></i>Cancel
+        </a>
+    </div>
+</form>
+
+<!-- Camera Modal -->
+<div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="cameraModalLabel"><i class="fas fa-camera me-2"></i> Capture Security Staff Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- Camera Controls -->
+                <div class="bg-light p-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <button id="switchCameraBtn" class="btn btn-sm btn-outline-secondary me-2">
+                            <i class="fas fa-sync me-1"></i> Switch Camera
+                        </button>
+                    </div>
+                    <div class="camera-status">
+                        <span class="badge bg-secondary">Initializing Camera...</span>
+                    </div>
+                </div>
+                
+                <!-- Camera Container -->
+                <div class="bg-dark text-center position-relative">
+                    <!-- Video element -->
+                    <video id="cameraFeed" style="width:100%; max-height:500px; object-fit: cover;" autoplay playsinline></video>
+                    
+                    <!-- Face guide overlay -->
+                    <div class="position-absolute top-50 start-50 translate-middle" style="border: 2px dashed rgba(255,255,255,0.6); border-radius: 50%; width: 200px; height: 200px; pointer-events: none;"></div>
+                    
+                    <!-- Canvas for captured photo -->
+                    <canvas id="photoCanvas" style="display:none; width:100%; max-height:500px; object-fit: contain;"></canvas>
+                    
+                    <!-- No camera message (initially hidden) -->
+                    <div id="noCameraMessage" class="position-absolute top-0 start-0 w-100 h-100 bg-dark d-none align-items-center justify-content-center" style="z-index: 10;">
+                        <div class="text-center p-4">
+                            <div class="mb-3 text-warning">
+                                <i class="fas fa-exclamation-triangle fa-3x"></i>
+                            </div>
+                            <h5 class="text-white">Camera not available</h5>
+                            <p class="text-light">Please check your camera permissions in browser settings.</p>
+                            <button id="retryCamera" class="btn btn-outline-light mt-2">
+                                <i class="fas fa-redo me-1"></i> Try Again
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Camera Controls -->
+                <div class="p-3 bg-light">
+                    <div class="d-flex justify-content-center">
+                        <button type="button" class="btn btn-primary me-2" id="captureBtn">
+                            <i class="fas fa-camera me-1"></i> Take Photo
+                        </button>
+                        <button type="button" class="btn btn-secondary me-2" id="retakeBtn" style="display:none">
+                            <i class="fas fa-redo me-1"></i> Retake
+                        </button>
+                        <button type="button" class="btn btn-success" id="savePhotoBtn" style="display:none">
+                            <i class="fas fa-check me-1"></i> Use Photo
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Instructions -->
+                <div class="p-3 border-top">
+                    <h6 class="text-muted"><i class="fas fa-info-circle me-1"></i> Tips for a good photo:</h6>
+                    <ul class="text-muted small mb-0">
+                        <li>Position your face inside the circle guide</li>
+                        <li>Ensure the area is well-lit for a clear image</li>
+                        <li>Look directly at the camera</li>
+                        <li>Use the "Switch Camera" button if needed</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle Allow Login toggle
+        const allowLoginToggle = document.getElementById('allowLoginToggle');
+        const allowLoginValue = document.getElementById('allowLoginValue');
+        
+        if (allowLoginToggle && allowLoginValue) {
+            allowLoginToggle.addEventListener('change', function() {
+                allowLoginValue.value = this.checked ? 'true' : 'false';
+            });
+        }
+        
+        // Camera functionality
+        const openCameraBtn = document.getElementById('openCameraBtn');
+        const cameraModal = document.getElementById('cameraModal');
+        const video = document.getElementById('cameraFeed');
+        const canvas = document.getElementById('photoCanvas');
+        const captureBtn = document.getElementById('captureBtn');
+        const retakeBtn = document.getElementById('retakeBtn');
+        const savePhotoBtn = document.getElementById('savePhotoBtn');
+        const switchCameraBtn = document.getElementById('switchCameraBtn');
+        const noCameraMessage = document.getElementById('noCameraMessage');
+        const retryCameraBtn = document.getElementById('retryCamera');
+        const cameraStatus = cameraModal.querySelector('.camera-status');
+        
+        let stream = null;
+        let facingMode = 'user'; // Start with front camera
+        let cameraAvailable = false;
+        
+        // Initialize Bootstrap modal
+        const bsModal = new bootstrap.Modal(cameraModal);
+        
+        // Handle modal open
+        if (openCameraBtn) {
+            openCameraBtn.addEventListener('click', function() {
+                bsModal.show();
+                startCamera();
+            });
+        }
+        
+        // Handle modal close - stop camera when modal is closed
+        cameraModal.addEventListener('hidden.bs.modal', function() {
+            stopCamera();
+        });
+        
+        // Handle retry camera button
+        if (retryCameraBtn) {
+            retryCameraBtn.addEventListener('click', function() {
+                noCameraMessage.classList.add('d-none');
+                noCameraMessage.classList.remove('d-flex');
+                startCamera();
+            });
+        }
+        
+        // Handle switch camera button
+        if (switchCameraBtn) {
+            switchCameraBtn.addEventListener('click', function() {
+                // Toggle facing mode between 'user' (front) and 'environment' (back)
+                facingMode = facingMode === 'user' ? 'environment' : 'user';
+                
+                // Update button text
+                switchCameraBtn.innerHTML = '<i class="fas fa-sync me-1"></i> ' + 
+                    (facingMode === 'user' ? 'Rear Camera' : 'Front Camera');
+                
+                // Restart camera with new facing mode
+                stopCamera();
+                startCamera();
+            });
+        }
+        
+        function updateCameraStatus(status, type = 'info') {
+            // Update the camera status indicator
+            if (cameraStatus) {
+                // Map type to Bootstrap color
+                const colorMap = {
+                    'info': 'primary',
+                    'success': 'success',
+                    'error': 'danger',
+                    'warning': 'warning',
+                    'loading': 'secondary'
+                };
+                
+                const color = colorMap[type] || 'secondary';
+                let icon = '';
+                
+                // Add appropriate icon
+                switch (type) {
+                    case 'success':
+                        icon = '<i class="fas fa-check-circle me-1"></i>';
+                        break;
+                    case 'error':
+                        icon = '<i class="fas fa-exclamation-circle me-1"></i>';
+                        break;
+                    case 'warning':
+                        icon = '<i class="fas fa-exclamation-triangle me-1"></i>';
+                        break;
+                    case 'loading':
+                        icon = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>';
+                        break;
+                    default:
+                        icon = '<i class="fas fa-info-circle me-1"></i>';
+                }
+                
+                cameraStatus.innerHTML = `<span class="badge bg-${color}">${icon}${status}</span>`;
+            }
+        }
+        
+        function startCamera() {
+            // Reset UI state
+            video.style.display = 'block';
+            canvas.style.display = 'none';
+            captureBtn.style.display = 'inline-block';
+            retakeBtn.style.display = 'none';
+            savePhotoBtn.style.display = 'none';
+            
+            // Update status to loading
+            updateCameraStatus('Accessing Camera...', 'loading');
+            
+            // Get available video devices to check if camera exists
+            navigator.mediaDevices.enumerateDevices()
+                .then(devices => {
+                    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                    
+                    if (videoDevices.length === 0) {
+                        throw new Error('No camera found on this device');
+                    }
+                    
+                    // Try to get user media with video
+                    return navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            facingMode: facingMode
+                        },
+                        audio: false
+                    });
+                })
+                .then(function(mediaStream) {
+                    // Set the stream
+                    stream = mediaStream;
+                    video.srcObject = stream;
+                    
+                    // Hide no camera message if visible
+                    noCameraMessage.classList.add('d-none');
+                    noCameraMessage.classList.remove('d-flex');
+                    
+                    // Enable capture button
+                    captureBtn.disabled = false;
+                    
+                    // Update status
+                    updateCameraStatus('Camera Active', 'success');
+                    cameraAvailable = true;
+                    
+                    // Make sure video plays
+                    video.onloadedmetadata = function() {
+                        video.play()
+                            .catch(err => {
+                                console.error('Error playing video:', err);
+                                updateCameraStatus('Error Starting Video', 'error');
+                            });
+                    };
+                })
+                .catch(function(err) {
+                    console.error('Error accessing camera:', err);
+                    
+                    // Show proper error message
+                    let errorMessage = 'Camera Error';
+                    
+                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        errorMessage = 'Permission Denied';
+                        noCameraMessage.querySelector('p').textContent = 'Camera access was denied. Please allow camera access in your browser settings.';
+                    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                        errorMessage = 'No Camera Found';
+                        noCameraMessage.querySelector('p').textContent = 'No camera device was found on this device.';
+                    } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                        errorMessage = 'Camera In Use';
+                        noCameraMessage.querySelector('p').textContent = 'Camera is being used by another application.';
+                    } else {
+                        noCameraMessage.querySelector('p').textContent = 'Could not access camera. Please check your connections or try a different browser.';
+                    }
+                    
+                    // Update status
+                    updateCameraStatus(errorMessage, 'error');
+                    
+                    // Show no camera message
+                    noCameraMessage.classList.remove('d-none');
+                    noCameraMessage.classList.add('d-flex');
+                    
+                    // Disable capture button
+                    captureBtn.disabled = true;
+                    
+                    cameraAvailable = false;
+                });
+        }
+        
+        function stopCamera() {
+            if (stream) {
+                const tracks = stream.getTracks();
+                tracks.forEach(function(track) {
+                    track.stop();
+                });
+                stream = null;
+                video.srcObject = null;
+            }
+            
+            // Reset camera status
+            updateCameraStatus('Camera Disconnected', 'warning');
+        }
+        
+        // Handle capture button click
+        if (captureBtn) {
+            captureBtn.addEventListener('click', function() {
+                if (!stream || !cameraAvailable) {
+                    alert('Camera is not available. Please check permissions and try again.');
+                    return;
+                }
+                
+                try {
+                    // Update status
+                    updateCameraStatus('Photo Captured', 'success');
+                    
+                    // Set canvas dimensions to video dimensions
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // Show canvas with captured photo
+                    canvas.style.display = 'block';
+                    video.style.display = 'none';
+                    
+                    // Toggle buttons
+                    captureBtn.style.display = 'none';
+                    retakeBtn.style.display = 'inline-block';
+                    savePhotoBtn.style.display = 'inline-block';
+                } catch (error) {
+                    console.error("Error capturing photo:", error);
+                    alert("Failed to capture photo. Please try again.");
+                    updateCameraStatus('Capture Failed', 'error');
+                }
+            });
+        }
+        
+        // Handle retake button click
+        if (retakeBtn) {
+            retakeBtn.addEventListener('click', function() {
+                // Update status
+                updateCameraStatus('Camera Active', 'success');
+                
+                // Show video again
+                video.style.display = 'block';
+                canvas.style.display = 'none';
+                
+                // Toggle buttons
+                captureBtn.style.display = 'inline-block';
+                retakeBtn.style.display = 'none';
+                savePhotoBtn.style.display = 'none';
+            });
+        }
+        
+        // Handle save photo button click
+        if (savePhotoBtn) {
+            savePhotoBtn.addEventListener('click', function() {
+                try {
+                    updateCameraStatus('Processing Photo...', 'loading');
+                    
+                    // Convert canvas to blob
+                    canvas.toBlob(function(blob) {
+                        if (!blob) {
+                            throw new Error("Failed to create image blob");
+                        }
+                        
+                        // Create file object with timestamp to prevent caching issues
+                        const file = new File([blob], 'security_photo_' + Date.now() + '.jpg', { type: 'image/jpeg' });
+                        
+                        // Check if DataTransfer is supported
+                        if (typeof DataTransfer !== 'undefined') {
+                            try {
+                                // Create a FileList object
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(file);
+                                
+                                // Find the file input and set its files
+                                const fileInput = document.querySelector('#{{ form.profile_photo.auto_id }}');
+                                if (fileInput) {
+                                    fileInput.files = dataTransfer.files;
+                                    
+                                    // Create preview image
+                                    const imgPreview = document.createElement('img');
+                                    imgPreview.src = URL.createObjectURL(blob);
+                                    imgPreview.className = 'img-thumbnail mt-2';
+                                    imgPreview.style.maxHeight = '100px';
+                                    
+                                    // Replace existing preview if any
+                                    const previewContainer = document.querySelector('#{{ form.profile_photo.auto_id }}').closest('.mb-3');
+                                    const existingPreview = previewContainer.querySelector('.captured-preview');
+                                    if (existingPreview) {
+                                        existingPreview.remove();
+                                    }
+                                    
+                                    // Add new preview with label
+                                    const previewDiv = document.createElement('div');
+                                    previewDiv.className = 'mt-2 captured-preview';
+                                    previewDiv.innerHTML = '<small class="text-muted">New photo captured:</small><br>';
+                                    previewDiv.appendChild(imgPreview);
+                                    previewContainer.appendChild(previewDiv);
+                                    
+                                    // Show success message
+                                    const successMsg = document.createElement('div');
+                                    successMsg.className = 'alert alert-success mt-2';
+                                    successMsg.innerHTML = '<i class="fas fa-check-circle me-2"></i>Photo captured successfully! Click Save Changes to apply.';
+                                    previewContainer.appendChild(successMsg);
+                                    
+                                    // Auto-remove success message after 5 seconds
+                                    setTimeout(() => {
+                                        successMsg.remove();
+                                    }, 5000);
+                                    
+                                    // Update status
+                                    updateCameraStatus('Photo Saved', 'success');
+                                    
+                                    // Close modal
+                                    bsModal.hide();
+                                }
+                            } catch (error) {
+                                console.error("Error with DataTransfer:", error);
+                                createDownloadFallback(blob);
+                            }
+                        } else {
+                            createDownloadFallback(blob);
+                        }
+                    }, 'image/jpeg', 0.9); // Slightly reduced quality for better performance
+                } catch (error) {
+                    console.error("Error saving photo:", error);
+                    alert("Failed to save photo. Please try again.");
+                    updateCameraStatus('Save Failed', 'error');
+                }
+            });
+        }
+        
+        // Fallback for browsers without DataTransfer support
+        function createDownloadFallback(blob) {
+            // Fallback message
+            alert("Your browser doesn't support automatic file selection. The photo will be downloaded - please select it manually.");
+            
+            // Create and trigger download link
+            const link = document.createElement('a');
+            link.download = 'security_photo_' + Date.now() + '.jpg';
+            link.href = URL.createObjectURL(blob);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Close modal
+            bsModal.hide();
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %} 

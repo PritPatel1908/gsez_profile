@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Document - GSEZ Profile{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Edit Document</h2>
+        <p class="text-muted">Update document information for {{ document.user.first_name }} {{ document.user.last_name }}</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'admin_manage_documents' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Documents
+        </a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Document Information</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <label for="user_display" class="form-label">User</label>
+                    <input type="text" id="user_display" class="form-control" value="{{ document.user.first_name }} {{ document.user.last_name }} ({{ document.user.gsezid }})" readonly>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="{{ form.govt_id_number.id_for_label }}" class="form-label">
+                        Government ID Number <span class="text-danger">*</span>
+                    </label>
+                    {{ form.govt_id_number }}
+                    {% if form.govt_id_number.errors %}
+                        <div class="text-danger">{{ form.govt_id_number.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.govt_id_photo.id_for_label }}" class="form-label">
+                        ID Photo
+                    </label>
+                    {% if document.govt_id_photo %}
+                        <div class="mb-2">
+                            <a href="{{ document.govt_id_photo.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> View Current Photo
+                            </a>
+                        </div>
+                    {% endif %}
+                    {{ form.govt_id_photo }}
+                    <small class="text-muted">Leave empty to keep current photo</small>
+                    {% if form.govt_id_photo.errors %}
+                        <div class="text-danger">{{ form.govt_id_photo.errors }}</div>
+                    {% endif %}
+                    <div class="mt-2">
+                        <img id="previewPhoto" src="#" alt="Preview" class="img-thumbnail mt-2" style="max-height: 100px; display: none;">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Update Document
+                </button>
+                <a href="{% url 'admin_manage_documents' %}" class="btn btn-secondary ms-2">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Preview photo upload
+    document.querySelector('#{{ form.govt_id_photo.id_for_label }}').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            const preview = document.querySelector('#previewPhoto');
+            
+            reader.onload = function(event) {
+                preview.src = event.target.result;
+                preview.style.display = 'block';
+            }
+            
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %} 

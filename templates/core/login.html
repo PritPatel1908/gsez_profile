@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - GSEZ Profile{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-lg border-0 rounded-lg mt-5">
+            {% if user.is_authenticated %}
+                <div class="card-header bg-primary text-white">
+                    <h3 class="text-center mb-0">Welcome Back</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        {% if user.profile_photo %}
+                            <img src="{{ user.profile_photo.url }}" alt="Profile Photo" class="rounded-circle img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                                <i class="fas fa-user fa-5x text-secondary"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="text-center">
+                        <h4>{{ user.get_full_name }}</h4>
+                        <p class="text-muted">{{ user.email }}</p>
+                        
+                        <div class="mt-4">
+                            {% if user.user_type == 'admin' %}
+                                <a href="{% url 'admin_dashboard' %}" class="btn btn-primary">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Go to Admin Dashboard
+                                </a>
+                            {% elif user.user_type == 'hr' %}
+                                <a href="{% url 'hr_dashboard' %}" class="btn btn-primary">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Go to HR Dashboard
+                                </a>
+                            {% elif user.user_type == 'security' %}
+                                <a href="{% url 'security_dashboard' %}" class="btn btn-primary">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Go to Security Dashboard
+                                </a>
+                            {% else %}
+                                <a href="{% url 'user_dashboard' %}" class="btn btn-primary">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                                </a>
+                            {% endif %}
+                            
+                            <a href="{% url 'logout' %}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card-header bg-primary text-white">
+                    <h3 class="text-center mb-0">Login</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Alert for displaying errors -->
+                    <div id="login-alert" class="alert alert-danger d-none">
+                    </div>
+                    
+                    <form id="loginForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">GSEZ ID</label>
+                            {{ form.username }}
+                            <div id="username-error" class="invalid-feedback"></div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                            {{ form.password }}
+                            <div id="password-error" class="invalid-feedback"></div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
+                            <a class="small text-primary" href="#">Forgot Password?</a>
+                            <button type="button" id="loginButton" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <div class="small">
+                        <a href="{% url 'register' %}" class="text-primary">Need an account? Sign up!</a>
+                        <br>
+                        <a href="{% url 'simple_register' %}" class="text-primary">Simple Sign up (username, email, password only)</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container for Notifications -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <!-- Toasts will be added here dynamically -->
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-center mb-4">About GSEZ Profile System</h5>
+                <p class="card-text">
+                    The GSEZ Profile Management System is a comprehensive platform designed to manage employee profiles, 
+                    documents, and information within the Gujarat Special Economic Zone. The system provides separate 
+                    interfaces for administrators, HR personnel, security staff, and regular users.
+                </p>
+                <div class="row mt-4 text-center">
+                    <div class="col-md-4">
+                        <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                        <h6>Secure & Reliable</h6>
+                        <p class="small text-muted">Your data is securely stored and managed</p>
+                    </div>
+                    <div class="col-md-4">
+                        <i class="fas fa-users-cog fa-3x text-primary mb-3"></i>
+                        <h6>User Management</h6>
+                        <p class="small text-muted">Comprehensive user profile management</p>
+                    </div>
+                    <div class="col-md-4">
+                        <i class="fas fa-file-alt fa-3x text-primary mb-3"></i>
+                        <h6>Document Storage</h6>
+                        <p class="small text-muted">Centralized document management</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .toast {
+        background-color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        opacity: 1 !important;
+        min-width: 300px;
+    }
+    
+    .toast-header {
+        background-color: white;
+        border-bottom: none;
+        padding: 0.75rem 1rem;
+    }
+    
+    .toast-body {
+        padding: 0.5rem 1rem 1rem;
+    }
+    
+    .toast-icon {
+        font-size: 1.2rem;
+        margin-right: 8px;
+    }
+    
+    .toast-error-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .toast-error-list li {
+        padding: 6px 0;
+        display: flex;
+        align-items: flex-start;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    
+    .toast-error-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .toast-error-list li i {
+        margin-right: 8px;
+        font-size: 0.9rem;
+        margin-top: 3px;
+    }
+    
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
+        const loginAlert = document.getElementById('login-alert');
+        const usernameInput = document.getElementById('{{ form.username.id_for_label }}');
+        const passwordInput = document.getElementById('{{ form.password.id_for_label }}');
+        const usernameError = document.getElementById('username-error');
+        const passwordError = document.getElementById('password-error');
+        
+        // Function to show error message in the alert box
+        function showAlert(message) {
+            loginAlert.textContent = message;
+            loginAlert.classList.remove('d-none');
+        }
+        
+        // Function to hide the alert box
+        function hideAlert() {
+            loginAlert.textContent = '';
+            loginAlert.classList.add('d-none');
+        }
+        
+        // Function to show field error
+        function showFieldError(field, errorElement, message) {
+            field.classList.add('is-invalid');
+            errorElement.textContent = message;
+        }
+        
+        // Function to clear field errors
+        function clearFieldError(field, errorElement) {
+            field.classList.remove('is-invalid');
+            errorElement.textContent = '';
+        }
+        
+        // Function to clear all errors
+        function clearAllErrors() {
+            hideAlert();
+            clearFieldError(usernameInput, usernameError);
+            clearFieldError(passwordInput, passwordError);
+        }
+        
+        // Handle form submission
+        if (loginButton && loginForm) {
+            loginButton.addEventListener('click', function() {
+                // Clear previous errors
+                clearAllErrors();
+                
+                // Get form data
+                const gsezid = usernameInput.value.trim();
+                const password = passwordInput.value;
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                // Basic validation
+                if (!gsezid) {
+                    showFieldError(usernameInput, usernameError, 'GSEZ ID is required');
+                    return;
+                }
+                
+                if (!password) {
+                    showFieldError(passwordInput, passwordError, 'Password is required');
+                    return;
+                }
+                
+                // Disable the button to prevent multiple submissions
+                loginButton.disabled = true;
+                loginButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Logging in...';
+                
+                // Create form data for AJAX
+                const formData = new FormData();
+                formData.append('username', gsezid);
+                formData.append('password', password);
+                formData.append('csrfmiddlewaretoken', csrfToken);
+                
+                // Try AJAX first
+                fetch('{% url "login" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Redirect on success
+                        window.location.href = data.redirect_url;
+                    } else {
+                        // Show error messages
+                        if (data.message) {
+                            showAlert(data.message);
+                        }
+                        
+                        if (data.errors) {
+                            for (const field in data.errors) {
+                                if (field === 'username') {
+                                    showFieldError(usernameInput, usernameError, data.errors[field][0]);
+                                } else if (field === 'password') {
+                                    showFieldError(passwordInput, passwordError, data.errors[field][0]);
+                                } else if (field === '__all__') {
+                                    showAlert(data.errors[field][0]);
+                                }
+                            }
+                        }
+                        
+                        // Re-enable the button
+                        loginButton.disabled = false;
+                        loginButton.innerHTML = 'Login';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error during AJAX login:', error);
+                    
+                    // Fall back to traditional form submission on AJAX failure
+                    const fallbackForm = document.createElement('form');
+                    fallbackForm.method = 'POST';
+                    fallbackForm.action = '{% url "login" %}';
+                    fallbackForm.style.display = 'none';
+                    
+                    // Add all form fields
+                    const usernameField = document.createElement('input');
+                    usernameField.type = 'text';
+                    usernameField.name = 'username';
+                    usernameField.value = gsezid;
+                    
+                    const passwordField = document.createElement('input');
+                    passwordField.type = 'password';
+                    passwordField.name = 'password';
+                    passwordField.value = password;
+                    
+                    const csrfField = document.createElement('input');
+                    csrfField.type = 'hidden';
+                    csrfField.name = 'csrfmiddlewaretoken';
+                    csrfField.value = csrfToken;
+                    
+                    const traditionalFlag = document.createElement('input');
+                    traditionalFlag.type = 'hidden';
+                    traditionalFlag.name = 'use_traditional_submit';
+                    traditionalFlag.value = 'true';
+                    
+                    // Append fields to the form
+                    fallbackForm.appendChild(usernameField);
+                    fallbackForm.appendChild(passwordField);
+                    fallbackForm.appendChild(csrfField);
+                    fallbackForm.appendChild(traditionalFlag);
+                    
+                    // Append form to the body and submit it
+                    document.body.appendChild(fallbackForm);
+                    fallbackForm.submit();
+                });
+            });
+            
+            // Also allow form submission with Enter key
+            loginForm.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    loginButton.click();
+                }
+            });
+        }
+        
+        // Check for any server-side errors passed in the page load
+        {% if form.errors %}
+            {% for field, errors in form.errors.items %}
+                {% if field == 'username' %}
+                    showFieldError(usernameInput, usernameError, "{{ errors.0 }}");
+                {% elif field == 'password' %}
+                    showFieldError(passwordInput, passwordError, "{{ errors.0 }}");
+                {% elif field == '__all__' %}
+                    showAlert("{{ errors.0 }}");
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'error' %}
+                    showAlert("{{ message }}");
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    });
+</script>
+{% endblock %}
+{% endblock %}

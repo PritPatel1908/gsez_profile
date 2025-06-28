@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Documents - GSEZ Profile{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Manage Documents</h2>
+        <p class="text-muted">View and manage all user documents in the system.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'admin_create_document' %}" class="btn btn-primary me-2">
+            <i class="fas fa-plus"></i> Add New Document
+        </a>
+        <div class="btn-group">
+            <a href="{% url 'admin_import_documents' %}" class="btn btn-success">
+                <i class="fas fa-file-import"></i> Import
+            </a>
+            <a href="{% url 'admin_export_documents' %}" class="btn btn-info text-white">
+                <i class="fas fa-file-export"></i> Export
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Search Box -->
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <form method="get" action="{% url 'admin_manage_documents' %}" id="filter-form">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" placeholder="Search by user name or ID number..." name="search" value="{{ search_query }}">
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                {% if search_query %}
+                <a href="{% url 'admin_manage_documents' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+                {% endif %}
+            </div>
+            
+            <!-- Hidden input for pagination -->
+            <input type="hidden" name="per_page" id="per_page_input" value="{{ items_per_page }}">
+            <input type="hidden" name="page" id="page_input" value="1">
+        </form>
+    </div>
+</div>
+
+<!-- Documents List -->
+<div class="card shadow">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>All Documents</h5>
+        <span class="badge bg-light text-dark">{{ total_items }} Documents</span>
+    </div>
+    <div class="card-body p-0">
+        {% if documents %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col"><i class="fas fa-user me-1"></i> User</th>
+                            <th scope="col"><i class="fas fa-id-card me-1"></i> Document ID</th>
+                            <th scope="col"><i class="fas fa-file me-1"></i> Document</th>
+                            <th scope="col"><i class="fas fa-cogs me-1"></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for document in documents %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <a href="{% url 'admin_user_detail' document.user.id %}" class="text-decoration-none">
+                                        {{ document.user.first_name }} {{ document.user.last_name }}
+                                        <small class="text-muted d-block">{{ document.user.username }}</small>
+                                    </a>
+                                </td>
+                                <td>{{ document.govt_id_number }}</td>
+                                <td>
+                                    {% if document.govt_id_photo %}
+                                        <a href="{{ document.govt_id_photo.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    {% else %}
+                                        <span class="badge bg-warning">No file</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'admin_edit_document' document.id %}" class="btn btn-sm btn-outline-primary" title="Edit Document">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'admin_delete_document' document.id %}" style="display: inline;" class="document-delete-form">
+                                            {% csrf_token %}
+                                            <button type="button" class="btn btn-sm btn-outline-danger document-delete-btn" title="Delete Document">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="card-footer bg-white">
+                {% include 'core/pagination.html' %}
+            </div>
+        {% else %}
+            <div class="alert alert-info m-3">
+                <i class="fas fa-info-circle me-2"></i> No documents found.
+                {% if search_query %}
+                    <a href="{% url 'admin_manage_documents' %}" class="alert-link">Clear search</a> to see all documents.
+                {% else %}
+                    <a href="{% url 'admin_create_document' %}" class="alert-link">Add a new document</a> to get started.
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Search input enhancement - clear button
+document.addEventListener('DOMContentLoaded', function() {
+    // Search input enhancement - clear button
+    const searchInput = document.querySelector('input[name="search"]');
+    if (searchInput && searchInput.value) {
+        const inputGroup = searchInput.parentElement;
+        const clearButton = document.createElement('span');
+        clearButton.className = 'input-group-text bg-transparent border-start-0 cursor-pointer';
+        clearButton.innerHTML = '<i class="fas fa-times text-muted"></i>';
+        clearButton.style.cursor = 'pointer';
+        clearButton.title = 'Clear search';
+        
+        clearButton.addEventListener('click', function() {
+            searchInput.value = '';
+            searchInput.focus();
+        });
+        
+        // Insert before the search button
+        inputGroup.insertBefore(clearButton, inputGroup.querySelector('button'));
+    }
+
+    // Handle document delete button clicks
+    document.querySelectorAll('.document-delete-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            // Get the delete confirmation modal
+            const deleteModal = document.getElementById('deleteConfirmModal');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            const deleteMessage = document.getElementById('deleteConfirmMessage');
+            
+            if (!deleteModal || !confirmBtn) {
+                // If modal doesn't exist, submit the form directly
+                this.closest('form').submit();
+                return;
+            }
+            
+            // Update message
+            if (deleteMessage) {
+                deleteMessage.textContent = 'Are you sure you want to delete this document?';
+            }
+            
+            // Get Bootstrap modal instance
+            const modal = new bootstrap.Modal(deleteModal);
+            
+            // Store form reference
+            const form = this.closest('form');
+            
+            // Set up confirm button action
+            const originalConfirmAction = confirmBtn.onclick;
+            confirmBtn.onclick = function() {
+                // Hide the modal
+                modal.hide();
+                
+                // Execute the form submission after modal is hidden
+                setTimeout(() => {
+                    form.submit();
+                }, 300);
+            };
+            
+            // Show the modal
+            modal.show();
+        });
+    });
+});
+</script>
+{% endblock %} 
